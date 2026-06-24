@@ -1,0 +1,48 @@
+{% extends 'catalogue/base.html' %}
+{% load static %}
+
+{% block title %}MovieShelf — Accueil{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>🎬 MovieShelf</h1>
+    <p>Votre catalogue personnel de films et séries</p>
+    <div class="hero-actions">
+        {% if user.is_authenticated %}
+        <a href="{% url 'movie-create' %}" class="btn">+ Ajouter un film</a>
+        {% else %}
+        <a href="{% url 'signup' %}" class="btn">Créer un compte</a>
+        <a href="{% url 'login' %}" class="btn btn-outline">Se connecter</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if movies %}
+<section class="section">
+    <h2>📽️ Derniers films ajoutés</h2>
+    <div class="movie-grid">
+        {% for movie in movies %}
+        <div class="movie-card">
+            <a href="{{ movie.get_absolute_url }}">
+                {% if movie.poster_url %}
+                <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
+                {% else %}
+                <div class="no-poster">🎞️</div>
+                {% endif %}
+                <div class="card-info">
+                    <span class="card-title">{{ movie.titre }}</span>
+                    <span class="card-meta">
+                        {{ movie.annee_sortie|default:"N/A" }}
+                        {% if movie.vote_average %} ⭐ {{ movie.vote_average }}{% endif %}
+                    </span>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="section-link">
+        <a href="{% url 'catalogue' %}">Voir tout le catalogue →</a>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

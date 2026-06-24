@@ -1,0 +1,58 @@
+{% extends 'catalogue/base.html' %}
+
+{% block title %}Catalogue — MovieShelf{% endblock %}
+
+{% block content %}
+<h1>📚 Catalogue</h1>
+
+{% if user.is_authenticated %}
+<div class="action-bar">
+    <a href="{% url 'movie-create' %}" class="btn">+ Ajouter un film</a>
+</div>
+{% endif %}
+
+{% if movies %}
+<div class="movie-grid">
+    {% for movie in movies %}
+    <div class="movie-card">
+        <a href="{{ movie.get_absolute_url }}">
+            {% if movie.poster_url %}
+            <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
+            {% else %}
+            <div class="no-poster">🎞️</div>
+            {% endif %}
+            <div class="card-info">
+                <span class="card-title">{{ movie.titre }}</span>
+                <span class="card-meta">
+                    {{ movie.annee_sortie|default:"N/A" }}
+                    {% if movie.vote_average %} ⭐ {{ movie.vote_average }}{% endif %}
+                </span>
+                <span class="badge badge-{{ movie.statut }}">{{ movie.get_statut_display }}</span>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline">← Précédent</a>
+    {% endif %}
+    <span class="page-current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline">Suivant →</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <p>📭 Aucun film dans le catalogue pour le moment.</p>
+    {% if user.is_authenticated %}
+    <a href="{% url 'movie-create' %}" class="btn">Ajouter le premier film</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

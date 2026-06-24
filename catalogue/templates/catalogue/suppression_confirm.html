@@ -1,0 +1,23 @@
+{% extends 'catalogue/base.html' %}
+
+{% block title %}Supprimer — {{ movie.titre }}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>🗑️ Supprimer le film</h1>
+
+    <div class="confirm-box">
+        <p>Êtes-vous sûr de vouloir supprimer définitivement le film :</p>
+        <h2>« {{ movie.titre }} »</h2>
+        <p class="warning">Cette action est irréversible.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger">🗑️ Confirmer la suppression</button>
+                <a href="{{ movie.get_absolute_url }}" class="btn btn-outline">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

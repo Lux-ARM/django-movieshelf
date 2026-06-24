@@ -1,0 +1,41 @@
+{% extends 'catalogue/base.html' %}
+
+{% block title %}{{ genre.nom }} — MovieShelf{% endblock %}
+
+{% block content %}
+<h1>🎭 {{ genre.nom }}</h1>
+{% if genre.description %}
+<p class="genre-description">{{ genre.description }}</p>
+{% endif %}
+
+{% if movies %}
+<div class="movie-grid">
+    {% for movie in movies %}
+    <div class="movie-card">
+        <a href="{{ movie.get_absolute_url }}">
+            {% if movie.poster_url %}
+            <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
+            {% else %}
+            <div class="no-poster">🎞️</div>
+            {% endif %}
+            <div class="card-info">
+                <span class="card-title">{{ movie.titre }}</span>
+                <span class="card-meta">
+                    {{ movie.annee_sortie|default:"N/A" }}
+                    {% if movie.vote_average %} ⭐ {{ movie.vote_average }}{% endif %}
+                </span>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>📭 Aucun film dans ce genre pour le moment.</p>
+</div>
+{% endif %}
+
+<p>
+    <a href="{% url 'genre-list' %}">← Retour aux genres</a>
+</p>
+{% endblock %}

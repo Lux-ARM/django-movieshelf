@@ -1,0 +1,21 @@
+{% extends 'catalogue/base.html' %}
+
+{% block title %}Inscription — MovieShelf{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>📝 Inscription</h1>
+
+    <form method="post" class="django-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-actions">
+            <button type="submit" class="btn">Créer mon compte</button>
+        </div>
+    </form>
+
+    <p style="margin-top: 1rem; text-align: center;">
+        Déjà un compte ? <a href="{% url 'login' %}">Connectez-vous</a>
+    </p>
+</div>
+{% endblock %}

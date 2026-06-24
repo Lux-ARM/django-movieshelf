@@ -1,0 +1,69 @@
+{% extends 'catalogue/base.html' %}
+
+{% block title %}{{ movie.titre }} — MovieShelf{% endblock %}
+
+{% block content %}
+<div class="movie-detail">
+    <!-- Poster -->
+    <div class="poster-section">
+        {% if movie.poster_url %}
+        <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" class="poster">
+        {% else %}
+        <div class="no-poster-large">🎞️</div>
+        {% endif %}
+    </div>
+
+    <!-- Infos -->
+    <div class="info-section">
+        <h1>{{ movie.titre }}</h1>
+
+        <div class="meta-info">
+            {% if movie.annee_sortie %}
+            <span class="meta-item">📅 {{ movie.annee_sortie }}</span>
+            {% endif %}
+            {% if movie.duree %}
+            <span class="meta-item">⏱️ {{ movie.duree }} min</span>
+            {% endif %}
+            {% if movie.vote_average %}
+            <span class="meta-item">⭐ {{ movie.vote_average }}/10 ({{ movie.vote_count }} votes)</span>
+            {% endif %}
+        </div>
+
+        <!-- Statut Badge -->
+        <span class="badge badge-{{ movie.statut }}">{{ movie.get_statut_display }}</span>
+
+        <!-- Réalisateur -->
+        {% if movie.realisateur %}
+        <p><strong>Réalisateur :</strong> {{ movie.realisateur }}</p>
+        {% endif %}
+
+        <!-- Genres -->
+        {% if movie.genres.all %}
+        <div class="genres">
+            {% for genre in movie.genres.all %}
+            <a href="{{ genre.get_absolute_url }}" class="tag">{{ genre.nom }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Résumé -->
+        {% if movie.resume %}
+        <div class="resume">
+            <h3>Synopsis</h3>
+            <p>{{ movie.resume }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Actions (auteur seulement) -->
+        {% if user == movie.auteur %}
+        <div class="detail-actions">
+            <a href="{% url 'movie-update' movie.pk %}" class="btn">✏️ Modifier</a>
+            <a href="{% url 'movie-delete' movie.pk %}" class="btn btn-danger">🗑️ Supprimer</a>
+        </div>
+        {% endif %}
+
+        <p class="author-info">Ajouté par <strong>{{ movie.auteur.username }}</strong> le {{
+            movie.date_creation|date:"d/m/Y" }}</p>
+    </div>
+</div>
+{% endblock %}

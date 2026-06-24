@@ -1,0 +1,52 @@
+{% extends 'catalogue/base.html' %}
+
+{% block title %}Profil — {{ user.username }}{% endblock %}
+
+{% block content %}
+<h1>👤 Profil de {{ user.username }}</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-number">{{ total }}</span>
+        <span class="stat-label">Films</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-number">{{ vus }}</span>
+        <span class="stat-label">Vus ✅</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-number">{{ a_voir }}</span>
+        <span class="stat-label">À voir 📋</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-number">{{ favoris }}</span>
+        <span class="stat-label">Favoris ❤️</span>
+    </div>
+</div>
+
+<h2>📽️ Mes films</h2>
+{% if movies %}
+<div class="movie-grid">
+    {% for movie in movies %}
+    <div class="movie-card">
+        <a href="{{ movie.get_absolute_url }}">
+            {% if movie.poster_url %}
+            <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
+            {% else %}
+            <div class="no-poster">🎞️</div>
+            {% endif %}
+            <div class="card-info">
+                <span class="card-title">{{ movie.titre }}</span>
+                <span class="badge badge-{{ movie.statut }}">{{ movie.get_statut_display }}</span>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>📭 Vous n'avez pas encore ajouté de films.</p>
+    <a href="{% url 'movie-create' %}" class="btn">+ Ajouter un film</a>
+</div>
+{% endif %}
+{% endblock %}
