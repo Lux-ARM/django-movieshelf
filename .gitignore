@@ -1,0 +1,41 @@
+# Environnement virtuel
+.venv/
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Django
+db.sqlite3
+/media/
+/staticfiles/
+*.log
+
+# Planification (hors dépôt)
+Plan/
+BatchFiles/
+
+# IDE / Éditeur
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# Variables d'environnement
+.env
+.env.*

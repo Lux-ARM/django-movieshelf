@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import os; os.environ['DJANGO_SUPERUSER_PASSWORD']='admin123'; import django; django.setup(); django.setup()
+                                                                                  ~~~~~~~~~~~~^^
+  File "f:\PROJECTS\WEB\MovieShelf\.venv\Lib\site-packages\django\__init__.py", line 19, in setup
+    configure_logging(settings.LOGGING_CONFIG, settings.LOGGING)
+                      ^^^^^^^^^^^^^^^^^^^^^^^
+  File "f:\PROJECTS\WEB\MovieShelf\.venv\Lib\site-packages\django\conf\__init__.py", line 75, in __getattr__
+    self._setup(name)
+    ~~~~~~~~~~~^^^^^^
+  File "f:\PROJECTS\WEB\MovieShelf\.venv\Lib\site-packages\django\conf\__init__.py", line 55, in _setup
+    raise ImproperlyConfigured(
+    ...<4 lines>...
+    )
+django.core.exceptions.ImproperlyConfigured: Requested setting LOGGING_CONFIG, but settings are not configured. You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.
