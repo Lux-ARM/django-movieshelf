@@ -21,6 +21,7 @@
             <a href="{% url 'genre-list' %}">Genres</a>
 
             {% if user.is_authenticated %}
+            <a href="{% url 'shelf' %}">📚 Ma Shelf</a>
             <a href="{% url 'movie-create' %}">+ Ajouter</a>
             <a href="{% url 'profile' %}">👤 {{ user.username }}</a>
             <form method="post" action="{% url 'logout' %}" style="display:inline">

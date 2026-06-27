@@ -4,7 +4,7 @@ from django.views.generic import CreateView, ListView
 from .forms import CustomUserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from catalogue.models import Movie
+from catalogue.models import Movie, UserMovie
 
 
 class SignupView(CreateView):
@@ -19,20 +19,20 @@ class SignupView(CreateView):
 
 
 class ProfileView(LoginRequiredMixin, ListView):
-    """Profil utilisateur avec ses films"""
+    """Profil utilisateur avec les stats de sa shelf"""
     model = Movie
     template_name = 'accounts/profile.html'
     context_object_name = 'movies'
 
     def get_queryset(self):
-        return Movie.objects.filter(auteur=self.request.user)
+        return UserMovie.objects.filter(user=self.request.user).select_related('movie')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        movies = Movie.objects.filter(auteur=user)
-        context['total'] = movies.count()
-        context['vus'] = movies.filter(statut='vu').count()
-        context['a_voir'] = movies.filter(statut='a_voir').count()
-        context['favoris'] = movies.filter(statut='favori').count()
+        shelf = UserMovie.objects.filter(user=user)
+        context['total'] = shelf.count()
+        context['vus'] = shelf.filter(statut='vu').count()
+        context['a_voir'] = shelf.filter(statut='a_voir').count()
+        context['favoris'] = shelf.filter(statut='favori').count()
         return context

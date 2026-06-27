@@ -1,9 +1,9 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
-from .models import Movie, Genre
+from .models import Movie, Genre, UserMovie
 from .forms import MovieForm
 
 
@@ -16,13 +16,45 @@ class AccueilView(ListView):
     def get_queryset(self):
         return Movie.objects.all().order_by('-date_creation')[:12]
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            context['user_shelf_ids'] = set(
+                UserMovie.objects.filter(user=self.request.user).values_list('movie_id', flat=True)
+            )
+        return context
+
 
 class CatalogueView(ListView):
-    """Liste de tous les films avec pagination"""
+    """Liste de tous les films avec pagination et filtres"""
     model = Movie
     template_name = 'catalogue/catalogue.html'
     context_object_name = 'movies'
     paginate_by = 12
+
+    def get_queryset(self):
+        queryset = Movie.objects.all()
+
+        # Filtre par genre
+        genre_slug = self.request.GET.get('genre')
+        if genre_slug:
+            queryset = queryset.filter(genres__slug=genre_slug)
+
+        # Recherche textuelle
+        q = self.request.GET.get('q')
+        if q:
+            queryset = queryset.filter(titre__icontains=q)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['genres'] = Genre.objects.all()
+        if self.request.user.is_authenticated:
+            context['user_shelf_ids'] = set(
+                UserMovie.objects.filter(user=self.request.user).values_list('movie_id', flat=True)
+            )
+        return context
 
 
 class MovieDetailView(DetailView):
@@ -31,9 +63,17 @@ class MovieDetailView(DetailView):
     template_name = 'catalogue/detail.html'
     context_object_name = 'movie'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            context['shelf_entry'] = UserMovie.objects.filter(
+                user=self.request.user, movie=self.object
+            ).first()
+        return context
+
 
 class MovieCreateView(LoginRequiredMixin, CreateView):
-    """Ajout d'un nouveau film"""
+    """Ajout d'un nouveau film (manuel)"""
     model = Movie
     form_class = MovieForm
     template_name = 'catalogue/creation.html'
@@ -94,4 +134,67 @@ class GenreDetailView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['genre'] = self.genre
+        if self.request.user.is_authenticated:
+            context['user_shelf_ids'] = set(
+                UserMovie.objects.filter(user=self.request.user).values_list('movie_id', flat=True)
+            )
         return context
+
+
+# ─── Shelf (nouveau) ───
+
+class AddToShelfView(LoginRequiredMixin, View):
+    """Ajoute un film du catalogue public a la shelf de l'utilisateur"""
+
+    def post(self, request, pk):
+        movie = get_object_or_404(Movie, pk=pk)
+        statut = request.POST.get('statut', 'a_voir')
+        note = request.POST.get('note')
+
+        _, created = UserMovie.objects.get_or_create(
+            user=request.user,
+            movie=movie,
+            defaults={'statut': statut, 'note': note if note else None}
+        )
+        if created:
+            messages.success(request, f'« {movie.titre} » ajouté à votre shelf !')
+        else:
+            messages.info(request, f'« {movie.titre} » est déjà dans votre shelf.')
+        return redirect('movie-detail', pk=pk)
+
+
+class ShelfView(LoginRequiredMixin, ListView):
+    """Shelf personnelle avec filtres par statut"""
+    model = UserMovie
+    template_name = 'catalogue/shelf.html'
+    context_object_name = 'shelf_items'
+    paginate_by = 12
+
+    def get_queryset(self):
+        qs = UserMovie.objects.filter(user=self.request.user).select_related('movie')
+        statut = self.request.GET.get('statut')
+        if statut:
+            qs = qs.filter(statut=statut)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        base_qs = UserMovie.objects.filter(user=self.request.user)
+        context['count_a_voir'] = base_qs.filter(statut='a_voir').count()
+        context['count_vu'] = base_qs.filter(statut='vu').count()
+        context['count_favori'] = base_qs.filter(statut='favori').count()
+        context['count_total'] = base_qs.count()
+        return context
+
+
+class UpdateShelfStatusView(LoginRequiredMixin, View):
+    """Mise a jour rapide du statut / note depuis la shelf"""
+
+    def post(self, request, pk):
+        entry = get_object_or_404(UserMovie, pk=pk, user=request.user)
+        entry.statut = request.POST.get('statut', entry.statut)
+        note = request.POST.get('note')
+        entry.note = int(note) if note else None
+        entry.save()
+        messages.success(request, f'Statut de « {entry.movie.titre} » mis à jour.')
+        return redirect('shelf')

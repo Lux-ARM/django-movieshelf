@@ -6,7 +6,7 @@
 <div class="form-container">
     <h1>🎬 Ajouter un film</h1>
 
-    <form method="post" class="django-form">
+    <form method="post" class="django-form" enctype="multipart/form-data">
         {% csrf_token %}
 
         {% for field in form %}

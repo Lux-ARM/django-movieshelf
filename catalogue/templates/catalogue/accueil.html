@@ -24,7 +24,9 @@
         {% for movie in movies %}
         <div class="movie-card">
             <a href="{{ movie.get_absolute_url }}">
-                {% if movie.poster_url %}
+                {% if movie.poster %}
+                <img src="{{ movie.poster.url }}" alt="{{ movie.titre }}" loading="lazy">
+                {% elif movie.poster_url %}
                 <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
                 {% else %}
                 <div class="no-poster">🎞️</div>

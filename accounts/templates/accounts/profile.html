@@ -27,17 +27,20 @@
 <h2>📽️ Mes films</h2>
 {% if movies %}
 <div class="movie-grid">
-    {% for movie in movies %}
+    {% for item in movies %}
     <div class="movie-card">
-        <a href="{{ movie.get_absolute_url }}">
-            {% if movie.poster_url %}
-            <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
+        <a href="{{ item.movie.get_absolute_url }}">
+            {% if item.movie.poster %}
+            <img src="{{ item.movie.poster.url }}" alt="{{ item.movie.titre }}" loading="lazy">
+            {% elif item.movie.poster_url %}
+            <img src="{{ item.movie.poster_url }}" alt="{{ item.movie.titre }}" loading="lazy">
             {% else %}
             <div class="no-poster">🎞️</div>
             {% endif %}
             <div class="card-info">
-                <span class="card-title">{{ movie.titre }}</span>
-                <span class="badge badge-{{ movie.statut }}">{{ movie.get_statut_display }}</span>
+                <span class="card-title">{{ item.movie.titre }}</span>
+                {% if item.note %}<span class="card-meta">⭐ {{ item.note }}/10</span>{% endif %}
+                <span class="badge badge-{{ item.statut }}">{{ item.get_statut_display }}</span>
             </div>
         </a>
     </div>

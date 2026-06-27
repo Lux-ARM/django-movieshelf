@@ -6,7 +6,9 @@
 <div class="movie-detail">
     <!-- Poster -->
     <div class="poster-section">
-        {% if movie.poster_url %}
+        {% if movie.poster %}
+        <img src="{{ movie.poster.url }}" alt="{{ movie.titre }}" class="poster">
+        {% elif movie.poster_url %}
         <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" class="poster">
         {% else %}
         <div class="no-poster-large">🎞️</div>
@@ -54,6 +56,35 @@
         </div>
         {% endif %}
 
+        <!-- Shelf Actions -->
+        {% if user.is_authenticated %}
+        <div class="shelf-actions">
+            {% if shelf_entry %}
+            <form method="post" action="{% url 'update-shelf-status' shelf_entry.pk %}">
+                {% csrf_token %}
+                <select name="statut">
+                    <option value="a_voir" {% if shelf_entry.statut == 'a_voir' %}selected{% endif %}>📋 À voir</option>
+                    <option value="vu" {% if shelf_entry.statut == 'vu' %}selected{% endif %}>✅ Vu</option>
+                    <option value="favori" {% if shelf_entry.statut == 'favori' %}selected{% endif %}>❤️ Favori</option>
+                </select>
+                <input type="number" name="note" min="1" max="10" placeholder="⭐/10"
+                    value="{{ shelf_entry.note|default:'' }}" style="width:80px">
+                <button type="submit" class="btn">Mettre à jour</button>
+            </form>
+            {% else %}
+            <form method="post" action="{% url 'add-to-shelf' movie.pk %}">
+                {% csrf_token %}
+                <select name="statut">
+                    <option value="a_voir">📋 À voir</option>
+                    <option value="vu">✅ Vu</option>
+                    <option value="favori">❤️ Favori</option>
+                </select>
+                <button type="submit" class="btn">+ Ajouter à ma Shelf</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <!-- Actions (auteur seulement) -->
         {% if user == movie.auteur %}
         <div class="detail-actions">
@@ -62,8 +93,7 @@
         </div>
         {% endif %}
 
-        <p class="author-info">Ajouté par <strong>{{ movie.auteur.username }}</strong> le {{
-            movie.date_creation|date:"d/m/Y" }}</p>
+        <p class="author-info">Ajouté par <strong>{{ movie.auteur.username }}</strong> le {{ movie.date_creation|date:"d/m/Y" }}</p>
     </div>
 </div>
 {% endblock %}
