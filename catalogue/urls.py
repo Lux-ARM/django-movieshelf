@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('api/llm/', views.llm_endpoint, name='llm-endpoint'),
     path('', views.AccueilView.as_view(), name='accueil'),
     path('catalogue/', views.CatalogueView.as_view(), name='catalogue'),
     path('catalogue/<int:pk>/', views.MovieDetailView.as_view(), name='movie-detail'),

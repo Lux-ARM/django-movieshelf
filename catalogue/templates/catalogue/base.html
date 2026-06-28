@@ -50,6 +50,59 @@
         {% endblock %}
     </main>
 
+    <!-- LLM Sparkling Widget -->
+    {% if user.is_authenticated %}
+    <div class="llm-widget">
+        <button class="sparkling-btn" id="toggleLLM" title="Assistant IA">✨</button>
+        <div class="llm-panel" id="llmPanel" style="display:none">
+            <h3>✨ Assistant IA</h3>
+            <textarea id="llmQuery" rows="2" placeholder="Ex: un film SF spatial pas trop long...
+Ou: ajoute Inception, vu, 9/10, favori"></textarea>
+            <button class="btn" id="llmSubmit" style="width:100%;margin-top:0.5rem">Chercher</button>
+            <div id="llmResult" style="margin-top:1rem"></div>
+        </div>
+    </div>
+    <script>
+        function getCSRFToken() {
+            const cookie = document.cookie.split('; ').find(r => r.startsWith('csrftoken='));
+            return cookie ? cookie.split('=')[1] : '';
+        }
+        document.getElementById('toggleLLM').addEventListener('click', () => {
+            const panel = document.getElementById('llmPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        });
+        document.getElementById('llmSubmit').addEventListener('click', async () => {
+            const query = document.getElementById('llmQuery').value.trim();
+            if (!query) return;
+            const resultDiv = document.getElementById('llmResult');
+            resultDiv.innerHTML = '<p style="color:var(--text-secondary)">🤔 Analyse en cours...</p>';
+            try {
+                const resp = await fetch('/api/llm/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+                    body: JSON.stringify({ query })
+                });
+                const data = await resp.json();
+                if (data.type === 'recommend') {
+                    if (data.movies.length === 0) {
+                        resultDiv.innerHTML = '<p style="color:var(--text-secondary)">Aucun film trouve.</p>';
+                    } else {
+                        resultDiv.innerHTML = data.movies.map(m => '<div style="display:flex;gap:0.75rem;align-items:center;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.05)"><img src="' + (m.poster || '') + '" style="width:45px;height:68px;object-fit:cover;border-radius:4px;background:var(--bg-primary)" onerror="this.style.display=\'none\'"><div><a href="' + m.url + '" style="font-weight:600">' + m.titre + '</a><span style="display:block;color:var(--text-secondary);font-size:0.8rem">' + (m.annee || 'N/A') + '</span></div></div>').join('');
+                    }
+                } else if (data.type === 'add') {
+                    resultDiv.innerHTML = '<p style="color:#22c55e">✅ <strong>' + data.titre + '</strong> ' + (data.message || 'Ajoute !') + ' <a href="' + data.url + '" style="font-size:0.8rem">Voir →</a></p>';
+                } else if (data.type === 'clarify') {
+                    resultDiv.innerHTML = '<p style="color:var(--accent)">🤔 ' + data.message + '</p>';
+                } else {
+                    resultDiv.innerHTML = '<p style="color:var(--accent-rose)">' + (data.message || 'Erreur inconnue.') + '</p>';
+                }
+            } catch (e) {
+                resultDiv.innerHTML = '<p style="color:var(--accent-rose)">Erreur de connexion.</p>';
+            }
+        });
+    </script>
+    {% endif %}
+
     <!-- Footer -->
     <footer class="footer">
         <p>MovieShelf — Projet étudiant Django 2025-2026</p>

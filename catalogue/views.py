@@ -1,4 +1,6 @@
+import json
 from django.shortcuts import get_object_or_404, redirect
+from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -266,6 +268,28 @@ class ShelfView(LoginRequiredMixin, ListView):
         context['count_favori'] = base_qs.filter(is_favori=True).count()
         context['count_total'] = base_qs.count()
         return context
+
+
+def llm_endpoint(request):
+    """Endpoint AJAX pour le Sparkling Button (LLM Agentic)."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'JSON invalide'}, status=400)
+
+    query = data.get('query', '').strip()
+    if not query:
+        return JsonResponse({'error': 'Requete vide'}, status=400)
+
+    from .llm_service import process_query
+    result = process_query(
+        query,
+        user=request.user if request.user.is_authenticated else None,
+    )
+    return JsonResponse(result)
 
 
 class UpdateShelfStatusView(LoginRequiredMixin, View):

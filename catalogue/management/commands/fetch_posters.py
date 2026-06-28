@@ -1,11 +1,12 @@
 import json
+import os
 import time
 import urllib.request
 import urllib.error
 from django.core.management.base import BaseCommand
 from catalogue.models import Movie
 
-TMDB_API_KEY = 'c539211898f81342c906f0504b6bc28b'
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "c539211898f81342c906f0504b6bc28b")
 TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500'
 
 
