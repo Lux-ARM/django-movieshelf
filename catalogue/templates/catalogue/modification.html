@@ -1,10 +1,10 @@
 {% extends 'catalogue/base.html' %}
 
-{% block title %}Modifier — {{ movie.titre }}{% endblock %}
+{% block title %}Modifier - {{ movie.titre }}{% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <h1>✏️ Modifier : {{ movie.titre }}</h1>
+    <h1 class="form-title"><span class="ico ico-edit ico-accent"></span> Modifier : {{ movie.titre }}</h1>
 
     <form method="post" class="django-form" enctype="multipart/form-data">
         {% csrf_token %}
@@ -23,8 +23,9 @@
         {% endfor %}
 
         <div class="form-actions">
-            <button type="submit" class="btn">💾 Enregistrer</button>
-            <a href="{{ movie.get_absolute_url }}" class="btn btn-outline">Annuler</a>
+            <button type="submit" class="btn"><span class="ico ico-check ico-sm"></span> Enregistrer</button>
+            <a href="{{ movie.get_absolute_url }}" class="btn btn-outline"><span class="ico ico-cross"></span>
+                Annuler</a>
         </div>
     </form>
 </div>

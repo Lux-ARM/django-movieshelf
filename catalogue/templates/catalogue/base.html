@@ -5,32 +5,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#08060E">
+    <meta name="description" content="MovieShelf - Votre catalogue personnel de films et series">
+    <meta name="color-scheme" content="dark">
     <title>{% block title %}MovieShelf{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'catalogue/style.css' %}">
 </head>
 
 <body>
-    <!-- Navbar Glassmorphism -->
+    <!-- Navbar Premium Glassmorphism -->
     <nav class="navbar">
         <div class="nav-brand">
-            <a href="{% url 'accueil' %}">🎬 MovieShelf</a>
+            <a href="{% url 'accueil' %}"><span class="ico ico-brand ico-sm"></span> MovieShelf</a>
         </div>
-        <div class="nav-links">
+
+        <button class="nav-toggle" id="navToggle" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <div class="nav-links" id="navLinks">
             <a href="{% url 'accueil' %}">Accueil</a>
             <a href="{% url 'catalogue' %}">Catalogue</a>
             <a href="{% url 'genre-list' %}">Genres</a>
 
             {% if user.is_authenticated %}
-            <a href="{% url 'shelf' %}">📚 Ma Shelf</a>
-            <a href="{% url 'movie-create' %}">+ Ajouter</a>
-            <a href="{% url 'profile' %}">👤 {{ user.username }}</a>
+            <a href="{% url 'shelf' %}"><span class="ico ico-shelf ico-sm ico-accent"></span> Ma Shelf</a>
+            <a href="{% url 'movie-create' %}" class="nav-pill-accent"><span class="ico ico-plus ico-sm"></span>
+                Ajouter</a>
+            <a href="{% url 'profile' %}"><span class="ico ico-user ico-sm"></span> {{ user.username }}</a>
             <form method="post" action="{% url 'logout' %}" style="display:inline">
                 {% csrf_token %}
-                <button type="submit" class="nav-btn">Déconnexion</button>
+                <button type="submit" class="nav-btn"><span class="ico ico-logout ico-sm"></span> Deconnexion</button>
             </form>
             {% else %}
             <a href="{% url 'login' %}">Connexion</a>
-            <a href="{% url 'signup' %}">Inscription</a>
+            <a href="{% url 'signup' %}" class="nav-pill-accent">Inscription</a>
             {% endif %}
         </div>
     </nav>
@@ -53,12 +64,17 @@
     <!-- LLM Sparkling Widget -->
     {% if user.is_authenticated %}
     <div class="llm-widget">
-        <button class="sparkling-btn" id="toggleLLM" title="Assistant IA">✨</button>
+        <button class="sparkling-btn" id="toggleLLM" title="Assistant IA"><svg viewBox="0 0 40 40" width="28" height="28" fill="white">
+  <path d="M20 2 L23 17 L38 20 L23 23 L20 38 L17 23 L2 20 L17 17 Z"/>
+  <path d="M9 6 L10 13 L17 14 L10 15 L9 22 L8 15 L1 14 L8 13 Z" opacity="0.6"/>
+  <path d="M31 24 L32 29 L37 30 L32 31 L31 36 L30 31 L25 30 L30 29 Z" opacity="0.6"/>
+</svg></button>
         <div class="llm-panel" id="llmPanel" style="display:none">
-            <h3>✨ Assistant IA</h3>
+            <h3><span class="ico ico-brand ico-sm"></span>  Assistant IA</h3>
             <textarea id="llmQuery" rows="2" placeholder="Ex: un film SF spatial pas trop long...
 Ou: ajoute Inception, vu, 9/10, favori"></textarea>
-            <button class="btn" id="llmSubmit" style="width:100%;margin-top:0.5rem">Chercher</button>
+            <button class="btn" id="llmSubmit" style="width:100%;margin-top:0.5rem"><span
+                    class="ico ico-search ico-sm"></span> Chercher</button>
             <div id="llmResult" style="margin-top:1rem"></div>
         </div>
     </div>
@@ -75,7 +91,7 @@ Ou: ajoute Inception, vu, 9/10, favori"></textarea>
             const query = document.getElementById('llmQuery').value.trim();
             if (!query) return;
             const resultDiv = document.getElementById('llmResult');
-            resultDiv.innerHTML = '<p style="color:var(--text-secondary)">🤔 Analyse en cours...</p>';
+            resultDiv.innerHTML = '<div class="llm-loading"></div><p style="color:var(--text-secondary);font-size:0.9rem;margin-top:0.5rem">Analyse en cours...</p>';
             try {
                 const resp = await fetch('/api/llm/', {
                     method: 'POST',
@@ -87,12 +103,12 @@ Ou: ajoute Inception, vu, 9/10, favori"></textarea>
                     if (data.movies.length === 0) {
                         resultDiv.innerHTML = '<p style="color:var(--text-secondary)">Aucun film trouve.</p>';
                     } else {
-                        resultDiv.innerHTML = data.movies.map(m => '<div style="display:flex;gap:0.75rem;align-items:center;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.05)"><img src="' + (m.poster || '') + '" style="width:45px;height:68px;object-fit:cover;border-radius:4px;background:var(--bg-primary)" onerror="this.style.display=\'none\'"><div><a href="' + m.url + '" style="font-weight:600">' + m.titre + '</a><span style="display:block;color:var(--text-secondary);font-size:0.8rem">' + (m.annee || 'N/A') + '</span></div></div>').join('');
+                        resultDiv.innerHTML = data.movies.map(m => '<div style="display:flex;gap:0.75rem;align-items:center;padding:0.6rem 0;border-bottom:1px solid rgba(139,92,246,0.08)"><img src="' + (m.poster || '') + '" style="width:45px;height:68px;object-fit:cover;border-radius:6px;background:var(--bg-secondary)" onerror="this.style.display=\'none\'"><div><a href="' + m.url + '" style="font-weight:600;color:var(--text-primary)">' + m.titre + '</a><span style="display:block;color:var(--text-secondary);font-size:0.8rem">' + (m.annee || 'N/A') + '</span></div></div>').join('');
                     }
                 } else if (data.type === 'add') {
-                    resultDiv.innerHTML = '<p style="color:#22c55e">✅ <strong>' + data.titre + '</strong> ' + (data.message || 'Ajoute !') + ' <a href="' + data.url + '" style="font-size:0.8rem">Voir →</a></p>';
+                    resultDiv.innerHTML = '<p style="color:var(--success)">Ajout: <strong>' + data.titre + '</strong> ' + (data.message || 'Ajoute !') + ' <a href="' + data.url + '" style="font-size:0.8rem">Voir</a></p>';
                 } else if (data.type === 'clarify') {
-                    resultDiv.innerHTML = '<p style="color:var(--accent)">🤔 ' + data.message + '</p>';
+                    resultDiv.innerHTML = '<p style="color:var(--accent-light)">' + data.message + '</p>';
                 } else {
                     resultDiv.innerHTML = '<p style="color:var(--accent-rose)">' + (data.message || 'Erreur inconnue.') + '</p>';
                 }
@@ -103,11 +119,12 @@ Ou: ajoute Inception, vu, 9/10, favori"></textarea>
     </script>
     {% endif %}
 
-    <!-- Footer -->
+    <!-- Footer Premium -->
     <footer class="footer">
-        <p>MovieShelf — Projet étudiant Django 2025-2026</p>
+        <p><span class="ico ico-brand ico-sm"></span> MovieShelf &mdash; Projet etudiant Django 2025-2026</p>
     </footer>
 
+    <script src="{% static 'catalogue/main.js' %}" defer></script>
     {% block extra_js %}{% endblock %}
 </body>
 

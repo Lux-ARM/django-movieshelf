@@ -1,11 +1,10 @@
 {% extends 'catalogue/base.html' %}
 
-{% block title %}Ma Shelf — MovieShelf{% endblock %}
+{% block title %}Ma Shelf - MovieShelf{% endblock %}
 
 {% block content %}
-<h1>📚 Ma Shelf</h1>
+<h1><span class="ico ico-shelf ico-accent"></span> Ma Shelf</h1>
 
-<!-- Onglets de filtre -->
 <div class="shelf-filters">
     <a href="{% url 'shelf' %}"
         class="btn {% if not request.GET.statut and not request.GET.favori %}btn-active{% else %}btn-outline{% endif %}">
@@ -13,14 +12,14 @@
     </a>
     <a href="?statut=a_voir"
         class="btn {% if request.GET.statut == 'a_voir' %}btn-active{% else %}btn-outline{% endif %}">
-        📋 À voir ({{ count_a_voir }})
+        <span class="ico ico-eye ico-sm"></span> A voir ({{ count_a_voir }})
     </a>
     <a href="?statut=vu"
         class="btn {% if request.GET.statut == 'vu' and not request.GET.favori %}btn-active{% else %}btn-outline{% endif %}">
-        ✅ Vu ({{ count_vu }})
+        <span class="ico ico-check ico-sm"></span> Vu ({{ count_vu }})
     </a>
     <a href="?favori=1" class="btn {% if request.GET.favori %}btn-active{% else %}btn-outline{% endif %}">
-        ❤️ Favoris ({{ count_favori }})
+        <span class="ico ico-heart ico-sm"></span> Favoris ({{ count_favori }})
     </a>
 </div>
 
@@ -34,24 +33,24 @@
             {% elif item.movie.poster_url %}
             <img src="{{ item.movie.poster_url }}" alt="{{ item.movie.titre }}" loading="lazy">
             {% else %}
-            <div class="no-poster">🎞️</div>
+            <div class="no-poster">--</div>
             {% endif %}
             <div class="card-info">
                 <span class="card-title">{{ item.movie.titre }}</span>
                 <span class="card-meta">
                     {{ item.movie.annee_sortie|default:"N/A" }}
-                    {% if item.note %} ⭐ {{ item.note }}/10{% endif %}
+                    {% if item.note %} <span class="ico ico-star ico-accent ico-sm"></span> {{ item.note }}/10{% endif %}
                 </span>
                 <span class="badge badge-{{ item.statut }}">{{ item.get_statut_display }}</span>
-                {% if item.is_favori %}<span class="badge badge-favori">❤️</span>{% endif %}
+                {% if item.is_favori %}<span class="badge badge-favori"><span class="ico ico-heart ico-sm"></span>
+                    Favori</span>{% endif %}
             </div>
         </a>
-        <!-- Statut rapide -->
         <form method="post" action="{% url 'update-shelf-status' item.pk %}" class="shelf-card-form">
             {% csrf_token %}
             <select name="statut" onchange="this.form.submit()">
-                <option value="a_voir" {% if item.statut == 'a_voir' %}selected{% endif %}>À voir</option>
-                <option value="vu" {% if item.statut == 'vu' %}selected{% endif %}>Vu</option>
+                <option value="a_voir" {% if item.statut == "a_voir" %}selected{% endif %}>A voir</option>
+                <option value="vu" {% if item.statut == "vu" %}selected{% endif %}>Vu</option>
             </select>
         </form>
     </div>
@@ -62,21 +61,22 @@
 <div class="pagination">
     {% if page_obj.has_previous %}
     <a href="?{% if request.GET.statut %}statut={{ request.GET.statut }}&{% endif %}{% if request.GET.favori %}favori={{ request.GET.favori }}&{% endif %}page={{ page_obj.previous_page_number }}"
-        class="btn btn-outline">← Précédent</a>
+        class="btn btn-outline"><span class="ico ico-arrow-left"></span> Precedent</a>
     {% endif %}
     <span class="page-current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
     {% if page_obj.has_next %}
     <a href="?{% if request.GET.statut %}statut={{ request.GET.statut }}&{% endif %}{% if request.GET.favori %}favori={{ request.GET.favori }}&{% endif %}page={{ page_obj.next_page_number }}"
-        class="btn btn-outline">Suivant →</a>
+        class="btn btn-outline">Suivant <span class="ico ico-arrow-right"></span></a>
     {% endif %}
 </div>
 {% endif %}
 
 {% else %}
 <div class="empty-state">
-    <p>📭 Votre shelf est vide.</p>
-    <a href="{% url 'catalogue' %}" class="btn">Explorer le catalogue</a>
-    <a href="{% url 'movie-create' %}" class="btn btn-outline">+ Ajouter un film manuellement</a>
+    <p>Votre shelf est vide.</p>
+    <a href="{% url 'catalogue' %}" class="btn"><span class="ico ico-film"></span> Explorer le catalogue</a>
+    <a href="{% url 'movie-create' %}" class="btn btn-outline"><span class="ico ico-plus ico-sm"></span> Ajouter un film
+        manuellement</a>
 </div>
 {% endif %}
 {% endblock %}

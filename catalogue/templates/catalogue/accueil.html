@@ -1,16 +1,16 @@
 {% extends 'catalogue/base.html' %}
 {% load static dict_filters %}
 
-{% block title %}MovieShelf — Accueil{% endblock %}
+{% block title %}MovieShelf - Accueil{% endblock %}
 
 {% block content %}
 
 {% if user.is_authenticated and is_personalized %}
 <!-- Recommandations personnalisees -->
 <section class="section">
-    <h2>⭐ Recommandé pour vous</h2>
-    <p style="color:var(--text-secondary);margin-bottom:1rem">
-        Basé sur vos favoris et vos notes ≥ 6/10
+    <h2><span class="ico ico-star ico-accent"></span> Recommande pour vous</h2>
+    <p class="section-subtitle">
+        Base sur vos favoris et vos notes &ge; 6/10
     </p>
     <div class="movie-grid">
         {% for movie in movies %}
@@ -21,7 +21,7 @@
                 {% elif movie.poster_url %}
                 <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
                 {% else %}
-                <div class="no-poster">🎞️</div>
+                <div class="no-poster">--</div>
                 {% endif %}
                 <div class="card-info">
                     <span class="card-title">{{ movie.titre }}</span>
@@ -32,7 +32,7 @@
                         {% endif %}
                     </span>
                     {% if movie.pk in user_shelf_ids %}
-                    <span class="badge badge-in-shelf">✅ Dans ma shelf</span>
+                    <span class="badge badge-in-shelf"><span class="ico ico-check ico-sm"></span> Dans ma shelf</span>
                     {% endif %}
                 </div>
             </a>
@@ -40,40 +40,43 @@
         {% endfor %}
     </div>
 
-    <!-- Pagination -->
     {% if is_paginated %}
     <div class="pagination">
         {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline">← Précédent</a>
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline"><span
+                class="ico ico-arrow-left"></span> Precedent</a>
         {% endif %}
         <span class="page-current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
         {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline">Plus de recommandations →</a>
+        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline">Recommandations suivantes <span
+                class="ico ico-arrow-right"></span></a>
         {% endif %}
     </div>
     {% endif %}
 </section>
 
 {% else %}
-<!-- Hero pour visiteurs -->
+<!-- Hero Cinematique -->
 <div class="hero">
-    <h1>🎬 MovieShelf</h1>
-    <p>Votre catalogue personnel de films et séries</p>
+    <h1><span class="ico ico-brand ico-xl"></span> MovieShelf</h1>
+    <p>Votre catalogue personnel de films et series &mdash; decouvrez, notez, partagez.</p>
     <div class="hero-actions">
         {% if user.is_authenticated %}
-        <a href="{% url 'movie-create' %}" class="btn">+ Ajouter un film</a>
+        <a href="{% url 'movie-create' %}" class="btn"><span class="ico ico-plus ico-sm"></span> Ajouter un film</a>
+        <a href="{% url 'catalogue' %}" class="btn btn-outline">Explorer le catalogue <span
+                class="ico ico-arrow-right"></span></a>
         {% else %}
-        <a href="{% url 'signup' %}" class="btn">Créer un compte</a>
-        <a href="{% url 'login' %}" class="btn btn-outline">Se connecter</a>
+        <a href="{% url 'signup' %}" class="btn">Creer un compte</a>
+        <a href="{% url 'login' %}" class="btn btn-outline">Se connecter <span class="ico ico-arrow-right"></span></a>
         {% endif %}
     </div>
 </div>
 {% endif %}
 
-<!-- Derniers films ajoutes (toujours affiche en bas) -->
+<!-- Derniers films ajoutes -->
 {% if latest_movies %}
 <section class="section">
-    <h2>📽️ Derniers films ajoutés</h2>
+    <h2><span class="ico ico-film ico-accent"></span> Derniers films ajoutes</h2>
     <div class="movie-grid">
         {% for movie in latest_movies %}
         <div class="movie-card">
@@ -83,13 +86,13 @@
                 {% elif movie.poster_url %}
                 <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
                 {% else %}
-                <div class="no-poster">🎞️</div>
+                <div class="no-poster">--</div>
                 {% endif %}
                 <div class="card-info">
                     <span class="card-title">{{ movie.titre }}</span>
                     <span class="card-meta">
                         {{ movie.annee_sortie|default:"N/A" }}
-                        {% if movie.vote_average %} ⭐ {{ movie.vote_average }}{% endif %}
+                        {% if movie.vote_average %} <span class="ico ico-star ico-accent ico-sm"></span> {{ movie.vote_average }}{% endif %}
                     </span>
                 </div>
             </a>
@@ -97,7 +100,7 @@
         {% endfor %}
     </div>
     <div class="section-link">
-        <a href="{% url 'catalogue' %}">Voir tout le catalogue →</a>
+        <a href="{% url 'catalogue' %}">Voir tout le catalogue <span class="ico ico-arrow-right"></span></a>
     </div>
 </section>
 {% endif %}

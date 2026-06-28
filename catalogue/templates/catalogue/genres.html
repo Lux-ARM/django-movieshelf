@@ -1,22 +1,22 @@
 {% extends 'catalogue/base.html' %}
 
-{% block title %}Genres — MovieShelf{% endblock %}
+{% block title %}Genres - MovieShelf{% endblock %}
 
 {% block content %}
-<h1>🎭 Genres Cinématographiques</h1>
+<h1><span class="ico ico-genre ico-accent"></span> Genres cinematographiques</h1>
 
 {% if genres %}
 <div class="genre-grid">
     {% for genre in genres %}
     <a href="{{ genre.get_absolute_url }}" class="genre-card">
-        <span class="genre-name">{{ genre.nom }}</span>
+        <span class="genre-name"><span class="ico ico-genre ico-sm ico-accent"></span> {{ genre.nom }}</span>
         <span class="genre-count">{{ genre.movies.count }} film{{ genre.movies.count|pluralize }}</span>
     </a>
     {% endfor %}
 </div>
 {% else %}
 <div class="empty-state">
-    <p>📭 Aucun genre pour le moment.</p>
+    <p>Aucun genre pour le moment.</p>
 </div>
 {% endif %}
 {% endblock %}

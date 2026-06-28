@@ -1,41 +1,31 @@
 {% extends 'catalogue/base.html' %}
 
-{% block title %}Catalogue — MovieShelf{% endblock %}
+{% block title %}Catalogue - MovieShelf{% endblock %}
 
 {% block content %}
-<h1>📚 Catalogue</h1>
+<h1><span class="ico ico-film ico-accent"></span> Catalogue</h1>
 
-<!-- Barre de filtres -->
 <form method="get" class="filters">
-    <input type="text" name="q" placeholder="🔍 Rechercher un film..." value="{{ request.GET.q }}">
+    <input type="text" name="q" placeholder="Rechercher un film..." value="{{ request.GET.q }}">
     <select name="genre">
         <option value="">Tous les genres</option>
         {% for g in genres %}
         <option value="{{ g.slug }}" {% if request.GET.genre == g.slug %}selected{% endif %}>{{ g.nom }}</option>
         {% endfor %}
     </select>
-    <input type="number" name="annee_min" placeholder="Année min" value="{{ request.GET.annee_min }}"
-        style="width:90px">
-    <input type="number" name="annee_max" placeholder="Année max" value="{{ request.GET.annee_max }}"
-        style="width:90px">
-    <input type="number" name="duree_min" placeholder="Durée min" value="{{ request.GET.duree_min }}"
-        style="width:90px">
-    <input type="number" name="duree_max" placeholder="Durée max" value="{{ request.GET.duree_max }}"
-        style="width:90px">
-    <select name="statut">
-        <option value="">Tous les statuts</option>
-        <option value="a_voir" {% if request.GET.statut == 'a_voir' %}selected{% endif %}>À voir</option>
-        <option value="vu" {% if request.GET.statut == 'vu' %}selected{% endif %}>Vu</option>
-    </select>
-    <button type="submit" class="btn">Filtrer</button>
-    {% if request.GET.q or request.GET.genre or request.GET.statut %}
-    <a href="{% url 'catalogue' %}" class="btn btn-outline">✕ Reset</a>
+    <input type="number" name="annee_min" placeholder="Annee min" value="{{ request.GET.annee_min }}">
+    <input type="number" name="annee_max" placeholder="Annee max" value="{{ request.GET.annee_max }}">
+    <input type="number" name="duree_min" placeholder="Duree min" value="{{ request.GET.duree_min }}">
+    <input type="number" name="duree_max" placeholder="Duree max" value="{{ request.GET.duree_max }}">
+    <button type="submit" class="btn"><span class="ico ico-search ico-sm"></span> Filtrer</button>
+    {% if request.GET.q or request.GET.genre %}
+    <a href="{% url 'catalogue' %}" class="btn btn-outline"><span class="ico ico-cross"></span> Reset</a>
     {% endif %}
 </form>
 
 {% if user.is_authenticated %}
 <div class="action-bar">
-    <a href="{% url 'movie-create' %}" class="btn">+ Ajouter un film</a>
+    <a href="{% url 'movie-create' %}" class="btn"><span class="ico ico-plus ico-sm"></span> Ajouter un film</a>
 </div>
 {% endif %}
 
@@ -49,16 +39,16 @@
             {% elif movie.poster_url %}
             <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
             {% else %}
-            <div class="no-poster">🎞️</div>
+            <div class="no-poster">--</div>
             {% endif %}
             <div class="card-info">
                 <span class="card-title">{{ movie.titre }}</span>
                 <span class="card-meta">
                     {{ movie.annee_sortie|default:"N/A" }}
-                    {% if movie.vote_average %} ⭐ {{ movie.vote_average }}{% endif %}
+                    {% if movie.vote_average %} <span class="ico ico-star ico-accent ico-sm"></span> {{ movie.vote_average }}{% endif %}
                 </span>
                 {% if user.is_authenticated and movie.pk in user_shelf_ids %}
-                <span class="badge badge-in-shelf">✅ Dans ma shelf</span>
+                <span class="badge badge-in-shelf"><span class="ico ico-check ico-sm"></span> Dans ma shelf</span>
                 {% endif %}
             </div>
         </a>
@@ -66,26 +56,25 @@
     {% endfor %}
 </div>
 
-<!-- Pagination -->
 {% if is_paginated %}
 <div class="pagination">
     {% if page_obj.has_previous %}
-    <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.genre %}genre={{ request.GET.genre }}&{% endif %}{% if request.GET.statut %}statut={{ request.GET.statut }}&{% endif %}page={{ page_obj.previous_page_number }}"
-        class="btn btn-outline">← Précédent</a>
+    <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.genre %}genre={{ request.GET.genre }}&{% endif %}page={{ page_obj.previous_page_number }}"
+        class="btn btn-outline"><span class="ico ico-arrow-left"></span> Precedent</a>
     {% endif %}
     <span class="page-current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
     {% if page_obj.has_next %}
-    <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.genre %}genre={{ request.GET.genre }}&{% endif %}{% if request.GET.statut %}statut={{ request.GET.statut }}&{% endif %}page={{ page_obj.next_page_number }}"
-        class="btn btn-outline">Suivant →</a>
+    <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.genre %}genre={{ request.GET.genre }}&{% endif %}page={{ page_obj.next_page_number }}"
+        class="btn btn-outline">Suivant <span class="ico ico-arrow-right"></span></a>
     {% endif %}
 </div>
 {% endif %}
 
 {% else %}
 <div class="empty-state">
-    <p>📭 Aucun film trouvé.</p>
+    <p>Aucun film trouve.</p>
     {% if user.is_authenticated %}
-    <a href="{% url 'movie-create' %}" class="btn">Ajouter le premier film</a>
+    <a href="{% url 'movie-create' %}" class="btn"><span class="ico ico-plus ico-sm"></span> Ajouter le premier film</a>
     {% endif %}
 </div>
 {% endif %}

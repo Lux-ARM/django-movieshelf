@@ -1,9 +1,9 @@
 {% extends 'catalogue/base.html' %}
 
-{% block title %}{{ genre.nom }} — MovieShelf{% endblock %}
+{% block title %}{{ genre.nom }} - MovieShelf{% endblock %}
 
 {% block content %}
-<h1>🎭 {{ genre.nom }}</h1>
+<h1><span class="ico ico-genre ico-accent"></span> {{ genre.nom }}</h1>
 {% if genre.description %}
 <p class="genre-description">{{ genre.description }}</p>
 {% endif %}
@@ -18,13 +18,13 @@
             {% elif movie.poster_url %}
             <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
             {% else %}
-            <div class="no-poster">🎞️</div>
+            <div class="no-poster">--</div>
             {% endif %}
             <div class="card-info">
                 <span class="card-title">{{ movie.titre }}</span>
                 <span class="card-meta">
                     {{ movie.annee_sortie|default:"N/A" }}
-                    {% if movie.vote_average %} ⭐ {{ movie.vote_average }}{% endif %}
+                    {% if movie.vote_average %} <span class="ico ico-star ico-accent ico-sm"></span> {{ movie.vote_average }}{% endif %}
                 </span>
             </div>
         </a>
@@ -33,11 +33,11 @@
 </div>
 {% else %}
 <div class="empty-state">
-    <p>📭 Aucun film dans ce genre pour le moment.</p>
+    <p>Aucun film dans ce genre pour le moment.</p>
 </div>
 {% endif %}
 
-<p>
-    <a href="{% url 'genre-list' %}">← Retour aux genres</a>
-</p>
+<div class="section-link" style="margin-top:2rem">
+    <a href="{% url 'genre-list' %}"><span class="ico ico-arrow-left"></span> Retour aux genres</a>
+</div>
 {% endblock %}

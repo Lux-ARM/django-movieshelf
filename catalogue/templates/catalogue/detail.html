@@ -1,51 +1,46 @@
 {% extends 'catalogue/base.html' %}
 
-{% block title %}{{ movie.titre }} — MovieShelf{% endblock %}
+{% block title %}{{ movie.titre }} - MovieShelf{% endblock %}
 
 {% block content %}
 <div class="movie-detail">
-    <!-- Poster -->
     <div class="poster-section">
         {% if movie.poster %}
         <img src="{{ movie.poster.url }}" alt="{{ movie.titre }}" class="poster">
         {% elif movie.poster_url %}
         <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" class="poster">
         {% else %}
-        <div class="no-poster-large">🎞️</div>
+        <div class="no-poster-large">--</div>
         {% endif %}
     </div>
 
-    <!-- Infos -->
     <div class="info-section">
         <h1>{{ movie.titre }}</h1>
 
         <div class="meta-info">
             {% if movie.annee_sortie %}
-            <span class="meta-item">📅 {{ movie.annee_sortie }}</span>
+            <span class="meta-item"><span class="ico ico-calendar ico-sm ico-muted"></span> {{ movie.annee_sortie }}</span>
             {% endif %}
             {% if movie.duree %}
-            <span class="meta-item">⏱️ {{ movie.duree }} min</span>
+            <span class="meta-item"><span class="ico ico-clock ico-sm ico-muted"></span> {{ movie.duree }} min</span>
             {% endif %}
             {% if movie.vote_average %}
-            <span class="meta-item">⭐ {{ movie.vote_average }}/10 ({{ movie.vote_count }} votes)</span>
+            <span class="meta-item"><span class="ico ico-star ico-sm ico-accent"></span> {{ movie.vote_average }}/10 ({{ movie.vote_count }} votes)</span>
             {% endif %}
         </div>
 
-        <!-- Réalisateur -->
         {% if movie.realisateur %}
-        <p><strong>Réalisateur :</strong> {{ movie.realisateur }}</p>
+        <p class="detail-realisateur"><strong>Realisateur :</strong> {{ movie.realisateur }}</p>
         {% endif %}
 
-        <!-- Genres -->
         {% if movie.genres.all %}
         <div class="genres">
             {% for genre in movie.genres.all %}
-            <a href="{{ genre.get_absolute_url }}" class="tag">{{ genre.nom }}</a>
+            <a href="{{ genre.get_absolute_url }}" class="tag"><span class="ico ico-genre ico-sm ico-accent"></span> {{ genre.nom }}</a>
             {% endfor %}
         </div>
         {% endif %}
 
-        <!-- Résumé -->
         {% if movie.resume %}
         <div class="resume">
             <h3>Synopsis</h3>
@@ -53,53 +48,52 @@
         </div>
         {% endif %}
 
-        <!-- Shelf Actions -->
         {% if user.is_authenticated %}
         <div class="shelf-actions">
             {% if shelf_entry %}
             <form method="post" action="{% url 'update-shelf-status' shelf_entry.pk %}">
                 {% csrf_token %}
                 <select name="statut">
-                    <option value=="a_voir" {% if shelf_entry.statut == 'a_voir' %}selected{% endif %}>📋 À voir</option>
-                    <option value=="vu" {% if shelf_entry.statut == 'vu' %}selected{% endif %}>✅ Vu</option>
+                    <option value="a_voir" {% if shelf_entry.statut == "a_voir" %}selected{% endif %}>A voir</option>
+                    <option value="vu" {% if shelf_entry.statut == "vu" %}selected{% endif %}>Vu</option>
                 </select>
-                <label style="margin:0 0.5rem;color:var(--text-secondary);font-size:0.85rem">
-                    <input type="checkbox" name="is_favori" {% if shelf_entry.is_favori %}checked{% endif %}> ❤️ Favori
+                <label class="shelf-label">
+                    <input type="checkbox" name="is_favori" {% if shelf_entry.is_favori %}checked{% endif %}> <span
+                        class="ico ico-heart ico-sm"></span> Favori
                 </label>
-                <input type="number" name="note" min="1" max="10" placeholder="⭐/10"
-                    value="{{ shelf_entry.note|default:'' }}" style="width:80px">
-                <button type="submit" class="btn">Mettre à jour</button>
+                <input type="number" name="note" min="1" max="10" placeholder="/10"
+                    value="{{ shelf_entry.note|default:'' }}">
+                <button type="submit" class="btn"><span class="ico ico-check ico-sm"></span> Mettre a jour</button>
             </form>
             {% else %}
             <form method="post" action="{% url 'add-to-shelf' movie.pk %}">
                 {% csrf_token %}
                 <select name="statut">
-                    <option value="a_voir">📋 À voir</option>
-                    <option value="vu">✅ Vu</option>
+                    <option value="a_voir"><span class="ico ico-eye"></span> A voir</option>
+                    <option value="vu"><span class="ico ico-check"></span> Vu</option>
                 </select>
-                <button type="submit" class="btn">+ Ajouter à ma Shelf</button>
+                <button type="submit" class="btn"><span class="ico ico-plus ico-sm"></span> Ajouter a ma Shelf</button>
             </form>
             {% endif %}
         </div>
         {% endif %}
 
-        <!-- Actions (auteur seulement) -->
         {% if user == movie.auteur %}
         <div class="detail-actions">
-            <a href="{% url 'movie-update' movie.pk %}" class="btn">✏️ Modifier</a>
-            <a href="{% url 'movie-delete' movie.pk %}" class="btn btn-danger">🗑️ Supprimer</a>
+            <a href="{% url 'movie-update' movie.pk %}" class="btn"><span class="ico ico-edit ico-sm"></span>
+                Modifier</a>
+            <a href="{% url 'movie-delete' movie.pk %}" class="btn btn-danger"><span
+                    class="ico ico-trash ico-sm"></span> Supprimer</a>
         </div>
         {% endif %}
 
-        <p class="author-info">Ajouté par <strong>{{ movie.auteur.username }}</strong> le {{
-            movie.date_creation|date:"d/m/Y" }}</p>
+        <p class="author-info">Ajoute par <strong>{{ movie.auteur.username }}</strong> le {{ movie.date_creation|date:"d/m/Y" }}</p>
     </div>
 </div>
 
-<!-- Films Similaires (TF-IDF) -->
 {% if similar_movies %}
 <section class="recommendations-section">
-    <h2>🎬 Films similaires</h2>
+    <h2><span class="ico ico-film ico-accent"></span> Films similaires</h2>
     <div class="movie-grid">
         {% for movie, score in similar_movies %}
         <div class="movie-card">
@@ -109,7 +103,7 @@
                 {% elif movie.poster_url %}
                 <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
                 {% else %}
-                <div class="no-poster">🎞️</div>
+                <div class="no-poster">--</div>
                 {% endif %}
                 <div class="card-info">
                     <span class="card-title">{{ movie.titre }}</span>
@@ -123,12 +117,11 @@
 </section>
 {% endif %}
 
-<!-- Recommandations Personnalisees (favoris + notes) -->
 {% if personal_recommendations %}
 <section class="recommendations-section">
-    <h2>⭐ Recommandé pour vous</h2>
-    <p style="color:var(--text-secondary);margin-bottom:1rem">
-        Basé sur vos favoris et vos notes ≥ 6/10
+    <h2><span class="ico ico-star ico-accent"></span> Recommande pour vous</h2>
+    <p class="section-subtitle">
+        Base sur vos favoris et vos notes &ge; 6/10
     </p>
     <div class="movie-grid">
         {% for movie, score in personal_recommendations %}
@@ -139,7 +132,7 @@
                 {% elif movie.poster_url %}
                 <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
                 {% else %}
-                <div class="no-poster">🎞️</div>
+                <div class="no-poster">--</div>
                 {% endif %}
                 <div class="card-info">
                     <span class="card-title">{{ movie.titre }}</span>
@@ -152,9 +145,9 @@
     </div>
 </section>
 {% endif %}
-<!-- Commentaires -->
-<section class="comments-section" style="margin:3rem 0">
-    <h2>💬 Commentaires ({{ comments|length }})</h2>
+
+<section class="comments-section">
+    <h2><span class="ico ico-comment ico-accent"></span> Commentaires ({{ comments|length }})</h2>
 
     {% if user.is_authenticated %}
     <form method="post" action="{% url 'movie-detail' movie.pk %}" class="django-form" style="margin-bottom:2rem">
@@ -181,7 +174,7 @@
     </div>
     {% endfor %}
     {% else %}
-    <p style="color:var(--text-secondary)">Aucun commentaire pour le moment.</p>
+    <p style="color:var(--text-muted)">Aucun commentaire pour le moment.</p>
     {% endif %}
 </section>
 

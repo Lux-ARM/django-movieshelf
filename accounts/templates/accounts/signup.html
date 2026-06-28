@@ -1,21 +1,37 @@
 {% extends 'catalogue/base.html' %}
 
-{% block title %}Inscription — MovieShelf{% endblock %}
+{% block title %}Inscription - MovieShelf{% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <h1>📝 Inscription</h1>
-
-    <form method="post" class="django-form">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <div class="form-actions">
-            <button type="submit" class="btn">Créer mon compte</button>
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-brand"><span class="ico ico-brand ico-sm"></span> MovieShelf</div>
+            <h1>Inscription</h1>
+            <p>Creez votre compte et commencez a cataloguer</p>
         </div>
-    </form>
 
-    <p style="margin-top: 1rem; text-align: center;">
-        Déjà un compte ? <a href="{% url 'login' %}">Connectez-vous</a>
-    </p>
+        <form method="post" class="django-form">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <small class="help-text">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.errors %}
+                <div class="form-error">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-full">Creer mon compte <span
+                    class="ico ico-arrow-right"></span></button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Deja un compte ? <a href="{% url 'login' %}">Connectez-vous</a></p>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -1,9 +1,9 @@
 {% extends 'catalogue/base.html' %}
 
-{% block title %}Profil — {{ user.username }}{% endblock %}
+{% block title %}Profil - {{ user.username }}{% endblock %}
 
 {% block content %}
-<h1>👤 Profil de {{ user.username }}</h1>
+<h1><span class="ico ico-user ico-accent"></span> Profil de {{ user.username }}</h1>
 
 <div class="stats-grid">
     <div class="stat-card">
@@ -12,15 +12,15 @@
     </div>
     <div class="stat-card">
         <span class="stat-number">{{ vus }}</span>
-        <span class="stat-label">Vus ✅</span>
+        <span class="stat-label"><span class="ico ico-check ico-sm ico-success"></span> Vus</span>
     </div>
     <div class="stat-card">
         <span class="stat-number">{{ a_voir }}</span>
-        <span class="stat-label">À voir 📋</span>
+        <span class="stat-label"><span class="ico ico-eye ico-sm ico-accent"></span> A voir</span>
     </div>
     <div class="stat-card">
         <span class="stat-number">{{ favoris }}</span>
-        <span class="stat-label">Favoris ❤️</span>
+        <span class="stat-label"><span class="ico ico-heart ico-sm ico-rose"></span> Favoris</span>
     </div>
 </div>
 
@@ -28,7 +28,7 @@
 <div class="stats-grid" style="margin-top:0.5rem">
     <div class="stat-card">
         <span class="stat-number">{{ note_moyenne }}/10</span>
-        <span class="stat-label">Note moyenne ⭐</span>
+        <span class="stat-label"><span class="ico ico-star ico-sm ico-accent"></span> Note moyenne</span>
     </div>
 </div>
 {% endif %}
@@ -36,15 +36,18 @@
 {% if top_genres %}
 <div class="stats-grid" style="margin-top:0.5rem">
     <div class="stat-card" style="grid-column:1/-1;text-align:left">
-        <span class="stat-label" style="margin-bottom:0.5rem">Genres dominants :</span>
+        <span class="stat-label"
+            style="margin-bottom:0.75rem;display:block;font-weight:600;color:var(--text-primary)">Genres dominants
+            :</span>
         {% for genre in top_genres %}
-        <a href="{{ genre.get_absolute_url }}" class="tag">{{ genre.nom }} ({{ genre.total }})</a>
+        <a href="{{ genre.get_absolute_url }}" class="tag" style="margin-right:0.3rem"><span
+                class="ico ico-genre ico-sm ico-accent"></span> {{ genre.nom }} ({{ genre.count }})</a>
         {% endfor %}
     </div>
 </div>
 {% endif %}
 
-<h2>📽️ Mes films</h2>
+<h2 style="margin-top:2rem"><span class="ico ico-film ico-accent"></span> Mes films</h2>
 {% if movies %}
 <div class="movie-grid">
     {% for item in movies %}
@@ -55,11 +58,11 @@
             {% elif item.movie.poster_url %}
             <img src="{{ item.movie.poster_url }}" alt="{{ item.movie.titre }}" loading="lazy">
             {% else %}
-            <div class="no-poster">🎞️</div>
+            <div class="no-poster">--</div>
             {% endif %}
             <div class="card-info">
                 <span class="card-title">{{ item.movie.titre }}</span>
-                {% if item.note %}<span class="card-meta">⭐ {{ item.note }}/10</span>{% endif %}
+                {% if item.note %}<span class="card-meta"><span class="ico ico-star ico-accent ico-sm"></span> {{ item.note }}/10</span>{% endif %}
                 <span class="badge badge-{{ item.statut }}">{{ item.get_statut_display }}</span>
             </div>
         </a>
@@ -68,8 +71,8 @@
 </div>
 {% else %}
 <div class="empty-state">
-    <p>📭 Vous n'avez pas encore ajouté de films.</p>
-    <a href="{% url 'movie-create' %}" class="btn">+ Ajouter un film</a>
+    <p>Vous n'avez pas encore ajoute de films.</p>
+    <a href="{% url 'movie-create' %}" class="btn"><span class="ico ico-plus ico-sm"></span> Ajouter un film</a>
 </div>
 {% endif %}
 {% endblock %}

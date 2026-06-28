@@ -1,10 +1,10 @@
 {% extends 'catalogue/base.html' %}
 
-{% block title %}Ajouter un film — MovieShelf{% endblock %}
+{% block title %}Ajouter un film - MovieShelf{% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <h1>🎬 Ajouter un film</h1>
+    <h1 class="form-title"><span class="ico ico-plus ico-accent"></span> Ajouter un film</h1>
 
     <form method="post" class="django-form" enctype="multipart/form-data">
         {% csrf_token %}
@@ -23,8 +23,8 @@
         {% endfor %}
 
         <div class="form-actions">
-            <button type="submit" class="btn">✅ Ajouter</button>
-            <a href="{% url 'catalogue' %}" class="btn btn-outline">Annuler</a>
+            <button type="submit" class="btn"><span class="ico ico-check ico-sm"></span> Ajouter</button>
+            <a href="{% url 'catalogue' %}" class="btn btn-outline"><span class="ico ico-cross"></span> Annuler</a>
         </div>
     </form>
 </div>
