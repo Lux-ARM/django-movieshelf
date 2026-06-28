@@ -2,22 +2,24 @@
 
 **Catalogue personnel de films et séries** — Projet Django 2025-2026
 
-MovieShelf est une application web permettant de cataloguer des films, suivre ce qui a été vu, est à voir ou est favori, et gérer une "shelf" (étagère) personnelle.
+MovieShelf est une application web de catalogage de films avec shelf personnelle, recommandations TF-IDF, et intégration TMDB.
 
 ---
 
 ## ✨ Fonctionnalités
 
-- 📚 **Catalogue Public** — Parcourir tous les films disponibles avec recherche et filtres par genre
-- 📥 **Shelf Personnelle** — Ajouter des films en 1 clic à sa collection personnelle
-- 📋 **Statuts** — À voir / Vu / Favori, avec gestion par utilisateur
-- ⭐ **Notation** — Attribuer une note personnelle de 1 à 10
-- 🎞️ **Affiches** — Support des posters via URL ou upload local
-- 🔍 **Filtres** — Par genre, statut, et recherche textuelle
-- 👤 **Authentification** — Inscription, connexion, déconnexion, profil
-- 🛠️ **CRUD Manuel** — Ajout, modification, suppression de films
-- 📊 **Statistiques** — Compteurs par statut sur le profil
-- 🗃️ **Import CSV** — Import de films depuis un dataset Kaggle (TMDB)
+- 📚 **Catalogue Public** — ~5000 films avec recherche, filtres par genre et statut
+- 📥 **Shelf Personnelle** — Ajout en 1 clic, statuts (À voir / Vu), favoris indépendants
+- ❤️ **Favoris + Statuts séparés** — Un film peut être "Vu" ET "Favori"
+- ⭐ **Notation** — Note personnelle de 1 à 10 par film
+- 🎞️ **Affiches** — URL ou upload local, récupération automatique via API TMDB
+- 🤖 **Recommandations TF-IDF** — Films similaires basés sur les résumés (scikit-learn)
+- 🎯 **Recommandations personnalisées** — Basées sur vos favoris + notes ≥ 6/10
+- 🔍 **Filtres** — Genre, statut (À voir/Vu), favoris, recherche textuelle
+- 👤 **Authentification** — Inscription, connexion, déconnexion, profil avec stats
+- 🛠️ **CRUD Manuel** — Ajout, modification, suppression avec anti-doublon
+- 🗃️ **Import CSV** — Import TMDB (Kaggle) + vérification/récupération posters
+- 🧪 **Tests** — 30+ tests unitaires (modèles, vues, shelf, CRUD, auth)
 
 ---
 
@@ -62,18 +64,30 @@ L'application est accessible sur [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 ---
 
-## 🗃️ Import de films (optionnel)
-
-Si vous disposez des fichiers CSV Kaggle (TMDB) dans le dossier `MovieDB/` :
+## 🗃️ Import de films
 
 ```bash
+# Import depuis les CSV Kaggle (MovieDB/)
 python manage.py import_movies --user-id 1 --limit 100
+
+# Récupérer les posters manquants via l'API TMDB
+python manage.py fetch_posters
+
+# Vérifier les posters existants (dry-run)
+python manage.py check_posters --dry-run
 ```
 
-Options :
-- `--user-id` : ID du superutilisateur propriétaire des films importés
-- `--limit` : Nombre max de films à importer (0 = tout)
-- `--movies` / `--credits` / `--posters` : Chemins personnalisés vers les CSV
+---
+
+## 🤖 Recommandations TF-IDF
+
+```bash
+# Précalculer la matrice TF-IDF (obligatoire avant les recos)
+python manage.py build_tfidf
+
+# Créer des utilisateurs de test avec favoris + notes
+python manage.py create_test_users
+```
 
 ---
 
@@ -95,11 +109,13 @@ MovieShelf/
 │   └── wsgi.py
 ├── catalogue/           # Application principale
 │   ├── models.py        # Genre, Movie, UserMovie
-│   ├── views.py         # Catalogue public + Shelf + CRUD
-│   ├── forms.py         # MovieForm
+│   ├── views.py         # Catalogue + Shelf + CRUD + Recos
+│   ├── recommender.py   # TF-IDF + recommandations
+│   ├── forms.py         # MovieForm (anti-doublon)
 │   ├── urls.py
 │   ├── admin.py
 │   ├── tests.py
+│   ├── templatetags/    # Filtres custom (dict_get)
 │   ├── templates/catalogue/
 │   │   ├── base.html
 │   │   ├── accueil.html
@@ -114,7 +130,11 @@ MovieShelf/
 │   ├── static/catalogue/
 │   │   └── style.css
 │   └── management/commands/
-│       └── import_movies.py
+│       ├── import_movies.py
+│       ├── build_tfidf.py
+│       ├── check_posters.py
+│       ├── fetch_posters.py
+│       └── create_test_users.py
 ├── accounts/            # Authentification
 │   ├── views.py
 │   ├── forms.py
@@ -138,7 +158,7 @@ MovieShelf/
 |--------|-------------|
 | **Genre** | `nom`, `slug`, `description` |
 | **Movie** | `titre`, `realisateur`, `resume`, `annee_sortie`, `duree`, `poster_url`, `poster`, `genres`, `auteur`, `vote_average`, `vote_count`, `tmdb_id` |
-| **UserMovie** | `user`, `movie`, `statut` (a_voir/vu/favori), `note` (1-10), `date_ajout` |
+| **UserMovie** | `user`, `movie`, `statut` (a_voir/vu), `is_favori`, `note` (1-10), `date_ajout` |
 
 ---
 
@@ -146,15 +166,15 @@ MovieShelf/
 
 | URL | Page | Accès |
 |-----|------|-------|
-| `/` | Accueil | Public |
+| `/` | Accueil (recommandations si connecté) | Public |
 | `/catalogue/` | Catalogue public | Public |
-| `/catalogue/<pk>/` | Fiche détail | Public |
+| `/catalogue/<pk>/` | Fiche détail + similaires + recommandations | Public |
 | `/catalogue/creer/` | Ajout manuel | Connecté |
 | `/catalogue/<pk>/modifier/` | Modifier (auteur) | Connecté |
 | `/catalogue/<pk>/supprimer/` | Supprimer (auteur) | Connecté |
 | `/catalogue/<pk>/add-to-shelf/` | Ajouter à sa shelf | Connecté |
-| `/shelf/` | Ma Shelf | Connecté |
-| `/shelf/<pk>/update/` | Modifier statut/note | Connecté |
+| `/shelf/` | Ma Shelf (filtres À voir/Vu/Favoris) | Connecté |
+| `/shelf/<pk>/update/` | Modifier statut/note/favori | Connecté |
 | `/genres/` | Liste des genres | Public |
 | `/genres/<slug>/` | Films par genre | Public |
 | `/accounts/signup/` | Inscription | Public |

@@ -7,18 +7,19 @@
 
 <!-- Onglets de filtre -->
 <div class="shelf-filters">
-    <a href="{% url 'shelf' %}" class="btn {% if not request.GET.statut %}btn-active{% else %}btn-outline{% endif %}">
+    <a href="{% url 'shelf' %}"
+        class="btn {% if not request.GET.statut and not request.GET.favori %}btn-active{% else %}btn-outline{% endif %}">
         Tous ({{ count_total }})
     </a>
     <a href="?statut=a_voir"
         class="btn {% if request.GET.statut == 'a_voir' %}btn-active{% else %}btn-outline{% endif %}">
         📋 À voir ({{ count_a_voir }})
     </a>
-    <a href="?statut=vu" class="btn {% if request.GET.statut == 'vu' %}btn-active{% else %}btn-outline{% endif %}">
+    <a href="?statut=vu"
+        class="btn {% if request.GET.statut == 'vu' and not request.GET.favori %}btn-active{% else %}btn-outline{% endif %}">
         ✅ Vu ({{ count_vu }})
     </a>
-    <a href="?statut=favori"
-        class="btn {% if request.GET.statut == 'favori' %}btn-active{% else %}btn-outline{% endif %}">
+    <a href="?favori=1" class="btn {% if request.GET.favori %}btn-active{% else %}btn-outline{% endif %}">
         ❤️ Favoris ({{ count_favori }})
     </a>
 </div>
@@ -42,6 +43,7 @@
                     {% if item.note %} ⭐ {{ item.note }}/10{% endif %}
                 </span>
                 <span class="badge badge-{{ item.statut }}">{{ item.get_statut_display }}</span>
+                {% if item.is_favori %}<span class="badge badge-favori">❤️</span>{% endif %}
             </div>
         </a>
         <!-- Statut rapide -->
@@ -50,23 +52,21 @@
             <select name="statut" onchange="this.form.submit()">
                 <option value="a_voir" {% if item.statut == 'a_voir' %}selected{% endif %}>À voir</option>
                 <option value="vu" {% if item.statut == 'vu' %}selected{% endif %}>Vu</option>
-                <option value="favori" {% if item.statut == 'favori' %}selected{% endif %}>Favori</option>
             </select>
         </form>
     </div>
     {% endfor %}
 </div>
 
-<!-- Pagination -->
 {% if is_paginated %}
 <div class="pagination">
     {% if page_obj.has_previous %}
-    <a href="?{% if request.GET.statut %}statut={{ request.GET.statut }}&{% endif %}page={{ page_obj.previous_page_number }}"
+    <a href="?{% if request.GET.statut %}statut={{ request.GET.statut }}&{% endif %}{% if request.GET.favori %}favori={{ request.GET.favori }}&{% endif %}page={{ page_obj.previous_page_number }}"
         class="btn btn-outline">← Précédent</a>
     {% endif %}
     <span class="page-current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
     {% if page_obj.has_next %}
-    <a href="?{% if request.GET.statut %}statut={{ request.GET.statut }}&{% endif %}page={{ page_obj.next_page_number }}"
+    <a href="?{% if request.GET.statut %}statut={{ request.GET.statut }}&{% endif %}{% if request.GET.favori %}favori={{ request.GET.favori }}&{% endif %}page={{ page_obj.next_page_number }}"
         class="btn btn-outline">Suivant →</a>
     {% endif %}
 </div>

@@ -720,3 +720,29 @@ a {
     outline: none;
     border-color: var(--accent);
 }
+
+/* ===== Recommandations ===== */
+.recommendations-section {
+    margin: 3rem 0;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border-radius: var(--radius);
+}
+
+.recommendations-section h2 {
+    margin-bottom: 1rem;
+}
+
+.recommendations-section .movie-grid {
+    margin: 0;
+}
+
+.recommendation-score {
+    display: inline-block;
+    font-size: 0.75rem;
+    background: rgba(0, 164, 220, 0.15);
+    color: var(--accent);
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    margin-top: 0.3rem;
+}

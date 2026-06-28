@@ -56,12 +56,12 @@ class UserMovie(models.Model):
     STATUS_CHOICES = [
         ('a_voir', 'À voir'),
         ('vu', 'Vu'),
-        ('favori', 'Favori'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shelf')
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='shelf_entries')
     statut = models.CharField(max_length=10, choices=STATUS_CHOICES, default='a_voir')
+    is_favori = models.BooleanField(default=False)
     note = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Note personnelle sur 10")
     date_ajout = models.DateTimeField(auto_now_add=True)
 

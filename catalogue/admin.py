@@ -20,6 +20,6 @@ class MovieAdmin(admin.ModelAdmin):
 
 @admin.register(UserMovie)
 class UserMovieAdmin(admin.ModelAdmin):
-    list_display = ('user', 'movie', 'statut', 'note', 'date_ajout')
-    list_filter = ('statut', 'date_ajout')
+    list_display = ('user', 'movie', 'statut', 'is_favori', 'note', 'date_ajout')
+    list_filter = ('statut', 'is_favori', 'date_ajout')
     search_fields = ('user__username', 'movie__titre')

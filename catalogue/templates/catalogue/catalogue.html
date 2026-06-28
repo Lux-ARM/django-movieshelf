@@ -18,7 +18,6 @@
         <option value="">Tous les statuts</option>
         <option value="a_voir" {% if request.GET.statut == 'a_voir' %}selected{% endif %}>À voir</option>
         <option value="vu" {% if request.GET.statut == 'vu' %}selected{% endif %}>Vu</option>
-        <option value="favori" {% if request.GET.statut == 'favori' %}selected{% endif %}>Favori</option>
     </select>
     <button type="submit" class="btn">Filtrer</button>
     {% if request.GET.q or request.GET.genre or request.GET.statut %}

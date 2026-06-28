@@ -8,12 +8,21 @@ from .forms import MovieForm
 
 
 class AccueilView(ListView):
-    """Page d'accueil avec les derniers films ajoutes"""
+    """Page d'accueil avec recommandations ou derniers films ajoutes"""
     model = Movie
     template_name = 'catalogue/accueil.html'
     context_object_name = 'movies'
+    paginate_by = 5
 
     def get_queryset(self):
+        if self.request.user.is_authenticated:
+            try:
+                from .recommender import get_recommendations_for_user
+                self._recs = get_recommendations_for_user(self.request.user, top_n=24)
+                if self._recs:
+                    return [m for m, _ in self._recs]
+            except (FileNotFoundError, ImportError):
+                self._recs = []
         return Movie.objects.all().order_by('-date_creation')[:12]
 
     def get_context_data(self, **kwargs):
@@ -22,6 +31,13 @@ class AccueilView(ListView):
             context['user_shelf_ids'] = set(
                 UserMovie.objects.filter(user=self.request.user).values_list('movie_id', flat=True)
             )
+            context['is_personalized'] = True
+            # Scores pour l'affichage dans le template
+            if hasattr(self, '_recs') and self._recs:
+                score_map = {m.pk: s for m, s in self._recs}
+                context['rec_scores'] = score_map
+        # Derniers films ajoutes (toujours affiches en bas)
+        context['latest_movies'] = Movie.objects.all().order_by('-date_creation')[:12]
         return context
 
 
@@ -69,7 +85,37 @@ class MovieDetailView(DetailView):
             context['shelf_entry'] = UserMovie.objects.filter(
                 user=self.request.user, movie=self.object
             ).first()
+        # Recommandations TF-IDF
+        context['similar_movies'] = self._get_similar_movies()
+        context['personal_recommendations'] = self._get_personal_recommendations()
         return context
+
+    def _get_similar_movies(self):
+        """Films similaires via TF-IDF (resume)."""
+        if not self.object.resume:
+            return []
+        try:
+            from .recommender import get_similar_movies
+            similar = get_similar_movies(self.object.pk, top_n=5)
+            result = []
+            for sid, score in similar:
+                try:
+                    result.append((Movie.objects.get(pk=sid), int(score * 100)))
+                except Movie.DoesNotExist:
+                    pass
+            return result
+        except (FileNotFoundError, ImportError):
+            return []
+
+    def _get_personal_recommendations(self):
+        """Recommandations personnalisees basees sur les favoris de l'utilisateur."""
+        if not self.request.user.is_authenticated:
+            return []
+        try:
+            from .recommender import get_recommendations_for_user
+            return get_recommendations_for_user(self.request.user, top_n=4)
+        except (FileNotFoundError, ImportError):
+            return []
 
 
 class MovieCreateView(LoginRequiredMixin, CreateView):
@@ -154,7 +200,7 @@ class AddToShelfView(LoginRequiredMixin, View):
         _, created = UserMovie.objects.get_or_create(
             user=request.user,
             movie=movie,
-            defaults={'statut': statut, 'note': note if note else None}
+            defaults={'statut': statut, 'is_favori': False, 'note': note if note else None}
         )
         if created:
             messages.success(request, f'« {movie.titre} » ajouté à votre shelf !')
@@ -173,8 +219,11 @@ class ShelfView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         qs = UserMovie.objects.filter(user=self.request.user).select_related('movie')
         statut = self.request.GET.get('statut')
+        favori = self.request.GET.get('favori')
         if statut:
             qs = qs.filter(statut=statut)
+        if favori:
+            qs = qs.filter(is_favori=True)
         return qs
 
     def get_context_data(self, **kwargs):
@@ -182,7 +231,7 @@ class ShelfView(LoginRequiredMixin, ListView):
         base_qs = UserMovie.objects.filter(user=self.request.user)
         context['count_a_voir'] = base_qs.filter(statut='a_voir').count()
         context['count_vu'] = base_qs.filter(statut='vu').count()
-        context['count_favori'] = base_qs.filter(statut='favori').count()
+        context['count_favori'] = base_qs.filter(is_favori=True).count()
         context['count_total'] = base_qs.count()
         return context
 
@@ -193,6 +242,7 @@ class UpdateShelfStatusView(LoginRequiredMixin, View):
     def post(self, request, pk):
         entry = get_object_or_404(UserMovie, pk=pk, user=request.user)
         entry.statut = request.POST.get('statut', entry.statut)
+        entry.is_favori = request.POST.get('is_favori') == 'on'
         note = request.POST.get('note')
         entry.note = int(note) if note else None
         entry.save()

@@ -34,5 +34,5 @@ class ProfileView(LoginRequiredMixin, ListView):
         context['total'] = shelf.count()
         context['vus'] = shelf.filter(statut='vu').count()
         context['a_voir'] = shelf.filter(statut='a_voir').count()
-        context['favoris'] = shelf.filter(statut='favori').count()
+        context['favoris'] = shelf.filter(is_favori=True).count()
         return context

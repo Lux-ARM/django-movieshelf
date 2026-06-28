@@ -1,9 +1,61 @@
 {% extends 'catalogue/base.html' %}
-{% load static %}
+{% load static dict_filters %}
 
 {% block title %}MovieShelf — Accueil{% endblock %}
 
 {% block content %}
+
+{% if user.is_authenticated and is_personalized %}
+<!-- Recommandations personnalisees -->
+<section class="section">
+    <h2>⭐ Recommandé pour vous</h2>
+    <p style="color:var(--text-secondary);margin-bottom:1rem">
+        Basé sur vos favoris et vos notes ≥ 6/10
+    </p>
+    <div class="movie-grid">
+        {% for movie in movies %}
+        <div class="movie-card">
+            <a href="{{ movie.get_absolute_url }}">
+                {% if movie.poster %}
+                <img src="{{ movie.poster.url }}" alt="{{ movie.titre }}" loading="lazy">
+                {% elif movie.poster_url %}
+                <img src="{{ movie.poster_url }}" alt="{{ movie.titre }}" loading="lazy">
+                {% else %}
+                <div class="no-poster">🎞️</div>
+                {% endif %}
+                <div class="card-info">
+                    <span class="card-title">{{ movie.titre }}</span>
+                    <span class="card-meta">
+                        {{ movie.annee_sortie|default:"N/A" }}
+                        {% if movie.pk in rec_scores %}
+                        <span class="recommendation-score">{{ rec_scores|dict_get:movie.pk }}%</span>
+                        {% endif %}
+                    </span>
+                    {% if movie.pk in user_shelf_ids %}
+                    <span class="badge badge-in-shelf">✅ Dans ma shelf</span>
+                    {% endif %}
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline">← Précédent</a>
+        {% endif %}
+        <span class="page-current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline">Plus de recommandations →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</section>
+
+{% else %}
+<!-- Hero pour visiteurs -->
 <div class="hero">
     <h1>🎬 MovieShelf</h1>
     <p>Votre catalogue personnel de films et séries</p>
@@ -16,12 +68,14 @@
         {% endif %}
     </div>
 </div>
+{% endif %}
 
-{% if movies %}
+<!-- Derniers films ajoutes (toujours affiche en bas) -->
+{% if latest_movies %}
 <section class="section">
     <h2>📽️ Derniers films ajoutés</h2>
     <div class="movie-grid">
-        {% for movie in movies %}
+        {% for movie in latest_movies %}
         <div class="movie-card">
             <a href="{{ movie.get_absolute_url }}">
                 {% if movie.poster %}
@@ -47,4 +101,5 @@
     </div>
 </section>
 {% endif %}
+
 {% endblock %}
