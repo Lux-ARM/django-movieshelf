@@ -24,6 +24,26 @@
     </div>
 </div>
 
+{% if note_moyenne %}
+<div class="stats-grid" style="margin-top:0.5rem">
+    <div class="stat-card">
+        <span class="stat-number">{{ note_moyenne }}/10</span>
+        <span class="stat-label">Note moyenne ⭐</span>
+    </div>
+</div>
+{% endif %}
+
+{% if top_genres %}
+<div class="stats-grid" style="margin-top:0.5rem">
+    <div class="stat-card" style="grid-column:1/-1;text-align:left">
+        <span class="stat-label" style="margin-bottom:0.5rem">Genres dominants :</span>
+        {% for genre in top_genres %}
+        <a href="{{ genre.get_absolute_url }}" class="tag">{{ genre.nom }} ({{ genre.total }})</a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 <h2>📽️ Mes films</h2>
 {% if movies %}
 <div class="movie-grid">

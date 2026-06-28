@@ -746,3 +746,32 @@ a {
     border-radius: 10px;
     margin-top: 0.3rem;
 }
+
+/* ===== Commentaires ===== */
+.comments-section {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.comment {
+    background: var(--bg-card);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.comment-date {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.comment-text {
+    color: var(--text-primary);
+    line-height: 1.5;
+}

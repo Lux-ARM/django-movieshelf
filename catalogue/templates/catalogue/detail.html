@@ -60,8 +60,8 @@
             <form method="post" action="{% url 'update-shelf-status' shelf_entry.pk %}">
                 {% csrf_token %}
                 <select name="statut">
-                    <option value="a_voir" {% if shelf_entry.statut == 'a_voir' %}selected{% endif %}>📋 À voir</option>
-                    <option value="vu" {% if shelf_entry.statut == 'vu' %}selected{% endif %}>✅ Vu</option>
+                    <option value=="a_voir" {% if shelf_entry.statut == 'a_voir' %}selected{% endif %}>📋 À voir</option>
+                    <option value=="vu" {% if shelf_entry.statut == 'vu' %}selected{% endif %}>✅ Vu</option>
                 </select>
                 <label style="margin:0 0.5rem;color:var(--text-secondary);font-size:0.85rem">
                     <input type="checkbox" name="is_favori" {% if shelf_entry.is_favori %}checked{% endif %}> ❤️ Favori
@@ -152,4 +152,37 @@
     </div>
 </section>
 {% endif %}
+<!-- Commentaires -->
+<section class="comments-section" style="margin:3rem 0">
+    <h2>💬 Commentaires ({{ comments|length }})</h2>
+
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'movie-detail' movie.pk %}" class="django-form" style="margin-bottom:2rem">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ comment_form.texte }}
+        </div>
+        <button type="submit" class="btn">Envoyer</button>
+    </form>
+    {% else %}
+    <p style="color:var(--text-secondary);margin-bottom:1.5rem">
+        <a href="{% url 'login' %}">Connectez-vous</a> pour laisser un commentaire.
+    </p>
+    {% endif %}
+
+    {% if comments %}
+    {% for comment in comments %}
+    <div class="comment">
+        <div class="comment-header">
+            <strong>{{ comment.user.username }}</strong>
+            <span class="comment-date">{{ comment.date_creation|date:"d/m/Y H:i" }}</span>
+        </div>
+        <p class="comment-text">{{ comment.texte }}</p>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="color:var(--text-secondary)">Aucun commentaire pour le moment.</p>
+    {% endif %}
+</section>
+
 {% endblock %}

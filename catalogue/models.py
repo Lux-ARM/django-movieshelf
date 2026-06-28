@@ -50,6 +50,20 @@ class Movie(models.Model):
         return reverse('movie-detail', kwargs={'pk': self.pk})
 
 
+class Comment(models.Model):
+    """Commentaire d'un utilisateur sur un film"""
+    movie = models.ForeignKey('Movie', on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    texte = models.TextField()
+    date_creation = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date_creation']
+
+    def __str__(self):
+        return f"{self.user.username} sur {self.movie.titre}"
+
+
 class UserMovie(models.Model):
     """Lien entre un utilisateur et un film dans sa shelf personnelle"""
 

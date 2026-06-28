@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Genre, Movie, UserMovie
+from .models import Genre, Movie, UserMovie, Comment
 
 
 @admin.register(Genre)
@@ -16,6 +16,16 @@ class MovieAdmin(admin.ModelAdmin):
     search_fields = ('titre', 'realisateur', 'resume')
     date_hierarchy = 'date_creation'
     filter_horizontal = ('genres',)
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'movie', 'texte_preview', 'date_creation')
+    search_fields = ('user__username', 'movie__titre', 'texte')
+
+    @admin.display(description='Texte')
+    def texte_preview(self, obj):
+        return obj.texte[:80] + ('...' if len(obj.texte) > 80 else '')
 
 
 @admin.register(UserMovie)

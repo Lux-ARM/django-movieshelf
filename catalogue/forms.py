@@ -1,7 +1,7 @@
 from django import forms
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from .models import Movie
+from .models import Movie, Comment
 
 
 class MovieForm(forms.ModelForm):
@@ -33,3 +33,15 @@ class MovieForm(forms.ModelForm):
                     )
                 )
         return titre
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['texte']
+        widgets = {
+            'texte': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Partagez votre avis sur ce film...',
+            }),
+        }

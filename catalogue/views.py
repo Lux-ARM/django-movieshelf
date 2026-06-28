@@ -3,8 +3,8 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
-from .models import Movie, Genre, UserMovie
-from .forms import MovieForm
+from .models import Movie, Genre, UserMovie, Comment
+from .forms import MovieForm, CommentForm
 
 
 class AccueilView(ListView):
@@ -56,6 +56,22 @@ class CatalogueView(ListView):
         if genre_slug:
             queryset = queryset.filter(genres__slug=genre_slug)
 
+        # Filtre par annee (min/max)
+        annee_min = self.request.GET.get('annee_min')
+        annee_max = self.request.GET.get('annee_max')
+        if annee_min:
+            queryset = queryset.filter(annee_sortie__gte=int(annee_min))
+        if annee_max:
+            queryset = queryset.filter(annee_sortie__lte=int(annee_max))
+
+        # Filtre par duree (min/max)
+        duree_min = self.request.GET.get('duree_min')
+        duree_max = self.request.GET.get('duree_max')
+        if duree_min:
+            queryset = queryset.filter(duree__gte=int(duree_min))
+        if duree_max:
+            queryset = queryset.filter(duree__lte=int(duree_max))
+
         # Recherche textuelle
         q = self.request.GET.get('q')
         if q:
@@ -88,7 +104,23 @@ class MovieDetailView(DetailView):
         # Recommandations TF-IDF
         context['similar_movies'] = self._get_similar_movies()
         context['personal_recommendations'] = self._get_personal_recommendations()
+        # Commentaires
+        context['comments'] = self.object.comments.all()
+        context['comment_form'] = CommentForm()
         return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if request.user.is_authenticated:
+            form = CommentForm(request.POST)
+            if form.is_valid():
+                Comment.objects.create(
+                    movie=self.object,
+                    user=request.user,
+                    texte=form.cleaned_data['texte'],
+                )
+                messages.success(request, 'Commentaire ajouté !')
+        return redirect('movie-detail', pk=self.object.pk)
 
     def _get_similar_movies(self):
         """Films similaires via TF-IDF (resume)."""

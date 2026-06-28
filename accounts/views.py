@@ -1,10 +1,11 @@
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView
+from django.db.models import Avg, Count
 from .forms import CustomUserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from catalogue.models import Movie, UserMovie
+from catalogue.models import Movie, UserMovie, Genre
 
 
 class SignupView(CreateView):
@@ -35,4 +36,14 @@ class ProfileView(LoginRequiredMixin, ListView):
         context['vus'] = shelf.filter(statut='vu').count()
         context['a_voir'] = shelf.filter(statut='a_voir').count()
         context['favoris'] = shelf.filter(is_favori=True).count()
+
+        # Note moyenne
+        avg = shelf.filter(note__isnull=False).aggregate(avg=Avg('note'))
+        context['note_moyenne'] = round(avg['avg'], 1) if avg['avg'] else None
+
+        # Genres dominants (top 5)
+        context['top_genres'] = Genre.objects.filter(
+            movies__shelf_entries__user=user
+        ).annotate(total=Count('movies')).order_by('-total')[:5]
+
         return context

@@ -14,6 +14,14 @@
         <option value="{{ g.slug }}" {% if request.GET.genre == g.slug %}selected{% endif %}>{{ g.nom }}</option>
         {% endfor %}
     </select>
+    <input type="number" name="annee_min" placeholder="Année min" value="{{ request.GET.annee_min }}"
+        style="width:90px">
+    <input type="number" name="annee_max" placeholder="Année max" value="{{ request.GET.annee_max }}"
+        style="width:90px">
+    <input type="number" name="duree_min" placeholder="Durée min" value="{{ request.GET.duree_min }}"
+        style="width:90px">
+    <input type="number" name="duree_max" placeholder="Durée max" value="{{ request.GET.duree_max }}"
+        style="width:90px">
     <select name="statut">
         <option value="">Tous les statuts</option>
         <option value="a_voir" {% if request.GET.statut == 'a_voir' %}selected{% endif %}>À voir</option>
