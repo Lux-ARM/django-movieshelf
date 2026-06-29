@@ -5,3 +5,9 @@ Pillow==11.3.0
 scikit-learn==1.9.0
 sqlparse==0.5.5
 tzdata==2026.2
+
+# Production / Railway
+gunicorn>=23.0.0
+dj-database-url>=2.3.0
+whitenoise>=6.9.0
+psycopg2-binary>=2.9.10

@@ -64,58 +64,226 @@
     <!-- LLM Sparkling Widget -->
     {% if user.is_authenticated %}
     <div class="llm-widget">
-        <button class="sparkling-btn" id="toggleLLM" title="Assistant IA"><svg viewBox="0 0 40 40" width="28" height="28" fill="white">
-  <path d="M20 2 L23 17 L38 20 L23 23 L20 38 L17 23 L2 20 L17 17 Z"/>
-  <path d="M9 6 L10 13 L17 14 L10 15 L9 22 L8 15 L1 14 L8 13 Z" opacity="0.6"/>
-  <path d="M31 24 L32 29 L37 30 L32 31 L31 36 L30 31 L25 30 L30 29 Z" opacity="0.6"/>
-</svg></button>
-        <div class="llm-panel" id="llmPanel" style="display:none">
-            <h3><span class="ico ico-brand ico-sm"></span>  Assistant IA</h3>
-            <textarea id="llmQuery" rows="2" placeholder="Ex: un film SF spatial pas trop long...
-Ou: ajoute Inception, vu, 9/10, favori"></textarea>
-            <button class="btn" id="llmSubmit" style="width:100%;margin-top:0.5rem"><span
-                    class="ico ico-search ico-sm"></span> Chercher</button>
-            <div id="llmResult" style="margin-top:1rem"></div>
+        <button class="sparkling-btn" id="toggleLLM" title="Assistant IA"><svg viewBox="0 0 40 40" width="28"
+                height="28" fill="white">
+                <path d="M20 2 L23 17 L38 20 L23 23 L20 38 L17 23 L2 20 L17 17 Z" />
+                <path d="M9 6 L10 13 L17 14 L10 15 L9 22 L8 15 L1 14 L8 13 Z" opacity="0.6" />
+                <path d="M31 24 L32 29 L37 30 L32 31 L31 36 L30 31 L25 30 L30 29 Z" opacity="0.6" />
+            </svg></button>
+        <div class="llm-panel" id="llmPanel"
+            style="display:none;position:fixed;bottom:80px;right:2rem;width:360px;max-height:calc(100vh - 120px);background:#0e0c18;border:1px solid rgba(139,92,246,0.15);border-radius:16px;box-shadow:0 12px 50px rgba(0,0,0,0.7);overflow:hidden;flex-direction:column;z-index:1000">
+            <div
+                style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(139,92,246,0.1);background:rgba(139,92,246,0.04);flex-shrink:0">
+                <span style="font-weight:700;font-size:0.95rem;color:#a78bfa">🎬 MovieBot</span>
+                <button id="llmClear"
+                    style="background:none;border:1px solid rgba(139,92,246,0.15);color:#999;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center"
+                    title="Nouvelle conversation">↺</button>
+            </div>
+            <div id="llmChat" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;justify-content:flex-start">
+                    <div
+                        style="max-width:85%;padding:8px 12px;border-radius:12px;font-size:0.85rem;line-height:1.45;background:rgba(139,92,246,0.1);color:#e2e2e2;border-bottom-left-radius:4px">
+                        Bonjour ! Je suis MovieBot. 😊<br>Demande-moi des films, ajoute a ta shelf, ou explore le
+                        catalogue !</div>
+                </div>
+            </div>
+            <div
+                style="display:flex;align-items:center;gap:6px;padding:10px 12px;border-top:1px solid rgba(139,92,246,0.1);background:rgba(0,0,0,0.25);flex-shrink:0">
+                <input type="text" id="llmInput"
+                    style="flex:1;padding:8px 12px;background:#1a1528;border:1px solid rgba(139,92,246,0.12);border-radius:20px;color:#e2e2e2;font-size:0.85rem;font-family:inherit;outline:none"
+                    placeholder="Ta question ici..." autocomplete="off">
+                <button id="llmSend"
+                    style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#ec4899);border:none;color:white;cursor:pointer;font-size:0.9rem;flex-shrink:0;display:flex;align-items:center;justify-content:center"
+                    title="Envoyer">➤</button>
+            </div>
         </div>
     </div>
     <script>
-        function getCSRFToken() {
-            const cookie = document.cookie.split('; ').find(r => r.startsWith('csrftoken='));
-            return cookie ? cookie.split('=')[1] : '';
-        }
-        document.getElementById('toggleLLM').addEventListener('click', () => {
+        (function () {
+            const getCSRFToken = () => {
+                const cookie = document.cookie.split('; ').find(r => r.startsWith('csrftoken='));
+                return cookie ? cookie.split('=')[1] : '';
+            };
+
+            // ── État du chat ──
+            let chatHistory = [];
+
+            // ── Éléments DOM ──
             const panel = document.getElementById('llmPanel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        });
-        document.getElementById('llmSubmit').addEventListener('click', async () => {
-            const query = document.getElementById('llmQuery').value.trim();
-            if (!query) return;
-            const resultDiv = document.getElementById('llmResult');
-            resultDiv.innerHTML = '<div class="llm-loading"></div><p style="color:var(--text-secondary);font-size:0.9rem;margin-top:0.5rem">Analyse en cours...</p>';
-            try {
-                const resp = await fetch('/api/llm/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
-                    body: JSON.stringify({ query })
-                });
-                const data = await resp.json();
-                if (data.type === 'recommend') {
-                    if (data.movies.length === 0) {
-                        resultDiv.innerHTML = '<p style="color:var(--text-secondary)">Aucun film trouve.</p>';
-                    } else {
-                        resultDiv.innerHTML = data.movies.map(m => '<div style="display:flex;gap:0.75rem;align-items:center;padding:0.6rem 0;border-bottom:1px solid rgba(139,92,246,0.08)"><img src="' + (m.poster || '') + '" style="width:45px;height:68px;object-fit:cover;border-radius:6px;background:var(--bg-secondary)" onerror="this.style.display=\'none\'"><div><a href="' + m.url + '" style="font-weight:600;color:var(--text-primary)">' + m.titre + '</a><span style="display:block;color:var(--text-secondary);font-size:0.8rem">' + (m.annee || 'N/A') + '</span></div></div>').join('');
-                    }
-                } else if (data.type === 'add') {
-                    resultDiv.innerHTML = '<p style="color:var(--success)">Ajout: <strong>' + data.titre + '</strong> ' + (data.message || 'Ajoute !') + ' <a href="' + data.url + '" style="font-size:0.8rem">Voir</a></p>';
-                } else if (data.type === 'clarify') {
-                    resultDiv.innerHTML = '<p style="color:var(--accent-light)">' + data.message + '</p>';
-                } else {
-                    resultDiv.innerHTML = '<p style="color:var(--accent-rose)">' + (data.message || 'Erreur inconnue.') + '</p>';
-                }
-            } catch (e) {
-                resultDiv.innerHTML = '<p style="color:var(--accent-rose)">Erreur de connexion.</p>';
+            const chatEl = document.getElementById('llmChat');
+            const inputEl = document.getElementById('llmInput');
+            const sendBtn = document.getElementById('llmSend');
+            const clearBtn = document.getElementById('llmClear');
+
+            // ── Utilitaires ──
+            function htmlEscape(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
             }
-        });
+
+            function formatMsg(text) {
+                return htmlEscape(text || '')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n/g, '<br>');
+            }
+
+            function renderMoviesHTML(movies) {
+                if (!movies || movies.length === 0) return '';
+                return '<div class="llm-movies">' + movies.map(m =>
+                    '<div class="llm-movie-item"><a href="' + m.url + '">' +
+                    (m.poster ? '<img src="' + m.poster + '" alt="" class="llm-movie-poster" onerror="this.style.display=\'none\'">' : '') +
+                    '<span class="llm-movie-title">' + htmlEscape(m.titre) + '</span>' +
+                    (m.annee ? '<span class="llm-movie-year">' + m.annee + '</span>' : '') +
+                    '</a></div>'
+                ).join('') + '</div>';
+            }
+
+            // ── Ajouter un message au chat ──
+            function addMessage(role, content, extra) {
+                const div = document.createElement('div');
+                div.className = 'llm-msg llm-msg-' + role;
+
+                let html = '';
+
+                // Si movies presents → que les cartes, pas de texte
+                if (extra && extra.movies && extra.movies.length > 0) {
+                    html = '<div class="llm-msg-content">' + renderMoviesHTML(extra.movies) + '</div>';
+                } else {
+                    html = '<div class="llm-msg-content">' + formatMsg(content) + '</div>';
+                }
+
+                if (extra && extra.redirect) {
+                    html += '<div class="llm-redirect">🔀 <a href="' + extra.redirect + '">' + htmlEscape(extra.label || 'Aller') + '</a></div>';
+                    setTimeout(function () { window.location.href = extra.redirect; }, 1500);
+                }
+
+                div.innerHTML = html;
+                chatEl.appendChild(div);
+                chatEl.scrollTop = chatEl.scrollHeight;
+            }
+
+            // ── Ajouter un indicateur de frappe ──
+            function showTyping() {
+                const div = document.createElement('div');
+                div.className = 'llm-msg llm-msg-bot';
+                div.id = 'llmTyping';
+                div.innerHTML = '<div class="llm-msg-content"><span class="llm-typing-dots">• • •</span></div>';
+                chatEl.appendChild(div);
+                chatEl.scrollTop = chatEl.scrollHeight;
+            }
+
+            function hideTyping() {
+                const el = document.getElementById('llmTyping');
+                if (el) el.remove();
+            }
+
+            // ── Envoyer un message ──
+            async function sendMessage() {
+                const text = inputEl.value.trim();
+                if (!text) return;
+
+                // Message utilisateur
+                inputEl.value = '';
+                addMessage('user', text);
+                chatHistory.push({ role: 'user', content: text });
+
+                // Typing indicator
+                showTyping();
+
+                try {
+                    const resp = await fetch('/api/llm/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRFToken() },
+                        body: JSON.stringify({ messages: chatHistory })
+                    });
+                    const data = await resp.json();
+
+                    hideTyping();
+
+                    // Stocker la reponse dans l'historique
+                    if (data.assistant_message) {
+                        chatHistory.push(data.assistant_message);
+                    }
+
+                    // ── Affichage conditionnel selon le type ──
+                    if (data.type === 'recommendation' && data.movies && data.movies.length > 0) {
+                        // Recommandation → juste les cartes films, pas de texte
+                        addMessage('bot', '', { movies: data.movies });
+                    } else if (data.type === 'add' && data.success) {
+                        // Ajout à la shelf → carte du film + confirmation courte
+                        const movieCard = [{
+                            id: data.id,
+                            titre: data.titre,
+                            url: data.url,
+                            poster: data.poster,
+                            annee: data.annee,
+                        }].filter(m => m.id || m.url);
+                        const label = (data.statut === 'vu' ? '✅ Vu' : '📌 A voir')
+                            + (data.is_favori ? ' ❤️' : '')
+                            + (data.titre ? ' — ' + data.titre : '');
+                        addMessage('bot', label, { movies: movieCard });
+                    } else if (data.type === 'navigate') {
+                        // Navigation → message + redirect
+                        addMessage('bot', data.message || '', {
+                            redirect: data.redirect,
+                            label: data.label,
+                        });
+                    } else {
+                        // Question / info → texte normal seulement
+                        addMessage('bot', data.message || '');
+                    }
+
+                    // Auto-redim de l'input
+                    inputEl.style.height = 'auto';
+
+                } catch (e) {
+                    hideTyping();
+                    addMessage('bot', '❌ Erreur de connexion au serveur.');
+                }
+            }
+
+            // ── Nouvelle conversation ──
+            function clearChat() {
+                // Garder le message d'accueil, supprimer le reste
+                while (chatEl.children.length > 1) {
+                    chatEl.removeChild(chatEl.lastChild);
+                }
+                chatHistory = [];
+                inputEl.value = '';
+                inputEl.style.height = 'auto';
+            }
+
+            // ── Événements ──
+            document.getElementById('toggleLLM').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isHidden = panel.style.display === 'none' || panel.style.display === '';
+                panel.style.display = isHidden ? 'flex' : 'none';
+                if (isHidden) inputEl.focus();
+            });
+
+            // Fermer le chat si on clique en dehors
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.llm-widget') && panel.style.display !== 'none') {
+                    panel.style.display = 'none';
+                }
+            });
+
+            sendBtn.addEventListener('click', sendMessage);
+            inputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            clearBtn.addEventListener('click', clearChat);
+
+            // Auto-resize input
+            inputEl.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 60) + 'px';
+            });
+        })();
     </script>
     {% endif %}
 

@@ -271,7 +271,7 @@ class ShelfView(LoginRequiredMixin, ListView):
 
 
 def llm_endpoint(request):
-    """Endpoint AJAX pour le Sparkling Button (LLM Agentic)."""
+    """Endpoint AJAX pour le chat LLM (v2 — Function Calling avec historique + routeur d'intention)."""
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
@@ -280,16 +280,22 @@ def llm_endpoint(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'JSON invalide'}, status=400)
 
-    query = data.get('query', '').strip()
-    if not query:
-        return JsonResponse({'error': 'Requete vide'}, status=400)
+    from .llm_service import route_request, process_query
 
-    from .llm_service import process_query
-    result = process_query(
-        query,
-        user=request.user if request.user.is_authenticated else None,
-    )
-    return JsonResponse(result)
+    user = request.user if request.user.is_authenticated else None
+
+    # Nouveau format chat avec historique → routeur d'intention
+    messages = data.get('messages')
+    if messages and isinstance(messages, list) and len(messages) > 0:
+        result = route_request(messages, user=user)
+    else:
+        # Fallback ancien format (query simple)
+        query = data.get('query', '').strip()
+        if not query:
+            return JsonResponse({'error': 'Requete vide'}, status=400)
+        result = process_query(query, user=user)
+
+    return JsonResponse(result, json_dumps_params={'ensure_ascii': False})
 
 
 class UpdateShelfStatusView(LoginRequiredMixin, View):
