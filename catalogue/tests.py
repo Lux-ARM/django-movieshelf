@@ -148,7 +148,7 @@ class AuthenticatedShelfTests(TestCase):
     def test_shelf_empty(self):
         response = self.client.get(reverse('shelf'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'votre shelf est vide')
+        self.assertContains(response, 'Votre shelf est vide.')
 
     def test_add_to_shelf(self):
         response = self.client.post(

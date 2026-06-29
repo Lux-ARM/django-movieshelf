@@ -17,9 +17,15 @@ class SignupTest(TestCase):
             'email': 'newuser@example.com',
             'password1': 'Str0ngP@ssword!',
             'password2': 'Str0ngP@ssword!',
+            'security_question': 'pet',
+            'security_answer': 'Rex',
         })
         self.assertRedirects(response, reverse('login'))
         self.assertTrue(User.objects.filter(username='newuser').exists())
+        # Verifier que le profil avec question secrete a ete cree
+        user = User.objects.get(username='newuser')
+        self.assertTrue(hasattr(user, 'profile'))
+        self.assertEqual(user.profile.security_question, 'pet')
 
     def test_signup_post_password_mismatch(self):
         response = self.client.post(reverse('signup'), {
@@ -27,6 +33,8 @@ class SignupTest(TestCase):
             'email': 'bad@example.com',
             'password1': 'Str0ngP@ssword!',
             'password2': 'WrongPassword',
+            'security_question': 'city',
+            'security_answer': 'Paris',
         })
         self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(username='baduser').exists())

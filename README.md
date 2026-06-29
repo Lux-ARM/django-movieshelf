@@ -4,7 +4,7 @@
 
 > Dépôt GitHub : [https://github.com/Lux-ARM/django-movieshelf](https://github.com/Lux-ARM/django-movieshelf)
 
-MovieShelf est une application web de catalogage de films avec shelf personnelle, recommandations TF-IDF, assistant IA (LLM), et intégration TMDB.
+MovieShelf est une application web de catalogage de films avec shelf personnelle, recommandations TF-IDF, assistant IA (LLM), réinitialisation de mot de passe par question secrète, et intégration TMDB.
 
 ---
 
@@ -18,13 +18,15 @@ MovieShelf est une application web de catalogage de films avec shelf personnelle
 - 🎞️ **Affiches** — URL ou upload local, récupération automatique via API TMDB
 - 🤖 **Recommandations TF-IDF** — Films similaires basés sur les résumés (scikit-learn)
 - 🎯 **Recommandations personnalisées** — Basées sur vos favoris + notes ≥ 6/10
-- ✨ **Assistant IA (LLM)** — Sparkling Button : recherche en langage naturel et ajout à la shelf via DeepSeek
+- ✨ **Assistant IA (LLM)** — Sparkling Button ✨ : recherche en langage naturel et ajout à la shelf via DeepSeek
+- 🔐 **Réinitialisation mot de passe** — Via question secrète (3 étapes : username → question → nouveau mot de passe)
 - 🔍 **Filtres** — Genre, année (min/max), durée (min/max), recherche textuelle
-- 👤 **Authentification** — Inscription, connexion, déconnexion, profil avec stats
+- 👤 **Authentification** — Inscription avec question secrète, connexion, déconnexion, profil avec stats
 - 📊 **Statistiques** — Films vus, à voir, favoris, note moyenne, genres dominants
 - 🛠️ **CRUD Manuel** — Ajout, modification, suppression avec anti-doublon
 - 🗃️ **Import CSV** — Import TMDB (Kaggle) + récupération automatique des posters
-- 🧪 **Tests** — 30+ tests unitaires (modèles, vues, shelf, CRUD, auth)
+- 🧪 **Tests** — 39 tests unitaires (modèles, vues, shelf, CRUD, auth, password reset)
+- 🎨 **Animations UI** — Scroll reveal, ripple effect sur boutons, compteurs animés, auto-dismiss toasts
 
 ---
 
@@ -59,7 +61,7 @@ pip install -r requirements.txt
 
 # 4. Configurer les variables d'environnement
 cp .env.example .env
-# Éditer .env avec vos clés API (TMDB, DeepSeek) — voir section Configuration API ci-dessous
+# Éditer .env avec vos clés API (TMDB, DeepSeek) — voir section Configuration API
 
 # 5. Appliquer les migrations
 python manage.py migrate
@@ -75,7 +77,7 @@ L'application est accessible sur [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 ---
 
-## 🔑 Configuration API (optionnel)
+## 🔑 Configuration API (optionnelle)
 
 Copiez [`.env.example`](.env.example) en `.env` et remplissez les clés :
 
@@ -106,6 +108,31 @@ python manage.py check_posters --dry-run
 
 ## 🤖 Recommandations TF-IDF
 
+### Principe
+
+Le systeme de recommandation utilise l'approche **TF-IDF (Term Frequency - Inverse Document Frequency)**
+associee a la **similarite cosinus**, implementee via la bibliotheque `scikit-learn` :
+
+1. Les resumes des films sont vectorises en une matrice creuse de **~4800 films x 5000 termes** (unigrammes + bigrammes)
+2. Le poids TF-IDF de chaque terme est calcule : plus un mot est frequent dans un resume mais rare dans le corpus, plus il est important
+3. La similarite cosinus entre deux vecteurs mesure l'angle qui les separe (plus l'angle est petit, plus les films sont similaires)
+4. Les recommandations personnalisees cumulent les scores des films favoris et des notes >= 6/10 de l'utilisateur
+
+### Performance
+
+| Metrique | Valeur |
+|----------|--------|
+| Films vectorises | ~4800 |
+| Features (termes) | 5000 |
+| Taille fichier pickle | ~1,4 Mo |
+| Stockage memoire | Matrice creuse CSR |
+| Temps de chargement | ~100 ms (singleton) |
+| N-grammes | (1, 2) |
+
+Le choix du TF-IDF (plutot que Sentence Transformers + base vectorielle FAISS/ChromaDB) a ete motive par
+la legerete du modele (1,4 Mo vs 80-400 Mo pour un Transformer), l'absence de dependance a une base
+vectorielle externe, et une qualite de recommandation suffisante pour un corpus de 4800 resumes.
+
 ```bash
 # Précalculer la matrice TF-IDF (obligatoire avant les recommandations)
 python manage.py build_tfidf
@@ -129,6 +156,18 @@ Nécessite la clé `DEEPSEEK_API_KEY` dans le fichier `.env`.
 
 ---
 
+## 🔐 Réinitialisation de mot de passe
+
+Un utilisateur ayant oublié son mot de passe peut le réinitialiser via sa question secrète :
+
+1. **Étape 1** — Saisir son nom d'utilisateur sur `/accounts/password-reset/`
+2. **Étape 2** — Répondre à la question secrète choisie lors de l'inscription
+3. **Étape 3** — Définir un nouveau mot de passe
+
+Le lien "Mot de passe oublié ?" est accessible depuis la page de connexion.
+
+---
+
 ## 🧪 Tests
 
 ```bash
@@ -136,11 +175,12 @@ python manage.py test catalogue accounts
 ```
 
 Les tests couvrent :
-- ✅ Modèles (Genre, Movie, UserMovie)
+- ✅ Modèles (Genre, Movie, UserMovie, Comment, UserProfile)
 - ✅ Pages publiques (accueil, catalogue, détail, genres)
 - ✅ CRUD (création, modification, suppression, permissions auteur)
 - ✅ Shelf (ajout, filtres, mise à jour statut/note, anti-doublon)
-- ✅ Authentification (inscription, connexion, déconnexion, profil)
+- ✅ Authentification (inscription avec question secrète, connexion, déconnexion, profil)
+- ✅ Inscription — création automatique du UserProfile
 
 ---
 
@@ -163,8 +203,11 @@ MovieShelf/
 │   ├── admin.py
 │   ├── tests.py
 │   ├── templatetags/        # Filtres custom (dict_get, etc.)
+│   ├── static/catalogue/
+│   │   ├── style.css        # 850+ lignes, thème Jellyfin Dark
+│   │   └── main.js          # Animations UI (scroll reveal, ripple, counters)
 │   ├── templates/catalogue/
-│   │   ├── base.html
+│   │   ├── base.html        # Base avec navbar Glassmorphism + LLM widget
 │   │   ├── accueil.html
 │   │   ├── catalogue.html
 │   │   ├── detail.html
@@ -174,24 +217,28 @@ MovieShelf/
 │   │   ├── shelf.html
 │   │   ├── genres.html
 │   │   └── genre_detail.html
-│   ├── static/catalogue/
-│   │   └── style.css        # 850+ lignes, thème Jellyfin Dark
 │   └── management/commands/
 │       ├── import_movies.py
 │       ├── build_tfidf.py
 │       ├── check_posters.py
 │       ├── fetch_posters.py
-│       └── create_test_users.py
+│       ├── create_test_users.py
+│       └── fix_template_eq.py    # Utilitaire syntaxe == dans templates
 ├── accounts/                # Application authentification
-│   ├── views.py
-│   ├── forms.py
+│   ├── models.py            # UserProfile (question secrète)
+│   ├── views.py             # Signup, Profile, Password Reset (3 étapes)
+│   ├── forms.py             # Inscription + Password Reset forms
 │   ├── urls.py
 │   ├── tests.py
 │   ├── admin.py
+│   ├── migrations/
 │   └── templates/accounts/
 │       ├── login.html
 │       ├── signup.html
-│       └── profile.html
+│       ├── profile.html
+│       ├── password_reset.html          # Étape 1 : username
+│       ├── password_reset_question.html  # Étape 2 : question secrète
+│       └── password_reset_change.html   # Étape 3 : nouveau mot de passe
 ├── MovieDB/                 # Données CSV (non versionnées)
 ├── .env.example             # Template des variables d'environnement
 ├── manage.py
@@ -204,12 +251,13 @@ MovieShelf/
 
 ## 🔑 Modèles de données
 
-| Modèle | Champs clés |
-|--------|-------------|
-| **Genre** | `nom`, `slug`, `description` |
-| **Movie** | `titre`, `realisateur`, `resume`, `annee_sortie`, `duree`, `poster_url`, `poster`, `genres`, `auteur`, `vote_average`, `vote_count`, `tmdb_id` |
-| **UserMovie** | `user`, `movie`, `statut` (a_voir/vu), `is_favori`, `note` (1-10), `date_ajout` |
-| **Comment** | `movie`, `user`, `texte`, `date_creation` |
+| Modèle | App | Champs clés |
+|--------|-----|-------------|
+| **Genre** | catalogue | `nom`, `slug`, `description` |
+| **Movie** | catalogue | `titre`, `realisateur`, `resume`, `annee_sortie`, `duree`, `poster_url`, `poster`, `genres` (M2M), `auteur`, `vote_average`, `vote_count`, `tmdb_id` |
+| **UserMovie** | catalogue | `user`, `movie`, `statut` (a_voir/vu), `is_favori`, `note` (1-10), `date_ajout` |
+| **Comment** | catalogue | `movie`, `user`, `texte`, `date_creation` |
+| **UserProfile** | accounts | `user` (OneToOne), `security_question` (choice), `security_answer` (hashé) |
 
 ### Note sur le statut et les favoris
 
@@ -232,10 +280,13 @@ Le `statut` (À voir / Vu) et `is_favori` sont deux champs **indépendants** dan
 | `/shelf/<pk>/update/` | Modifier statut/note/favori | Connecté |
 | `/genres/` | Liste des genres | Public |
 | `/genres/<slug>/` | Films par genre | Public |
-| `/accounts/signup/` | Inscription | Public |
+| `/accounts/signup/` | Inscription (avec question secrète) | Public |
 | `/accounts/login/` | Connexion | Public |
 | `/accounts/logout/` | Déconnexion | Connecté |
 | `/accounts/profile/` | Profil + statistiques personnelles | Connecté |
+| `/accounts/password-reset/` | Mot de passe oublié — étape 1 | Public |
+| `/accounts/password-reset/question/` | Mot de passe oublié — étape 2 | Public |
+| `/accounts/password-reset/change/` | Mot de passe oublié — étape 3 | Public |
 | `/admin/` | Django Admin | Staff |
 | `/api/llm/` | Endpoint AJAX assistant IA | Connecté |
 
@@ -243,7 +294,7 @@ Le `statut` (À voir / Vu) et `is_favori` sont deux champs **indépendants** dan
 
 ## 🎨 Design
 
-Thème sombre inspiré de Jellyfin (CSS Vanilla, ~850 lignes) :
+Thème sombre inspiré de Jellyfin (CSS Vanilla, ~850 lignes + JS animations) :
 
 | Variable | Couleur | Usage |
 |----------|---------|-------|
@@ -255,9 +306,16 @@ Thème sombre inspiré de Jellyfin (CSS Vanilla, ~850 lignes) :
 | `--accent-alt` | `#7b2cbf` | Accent violet |
 | `--accent-rose` | `#f72585` | Favoris, alertes |
 
+### Animations JavaScript ([`main.js`](catalogue/static/catalogue/main.js))
+- **Scroll Reveal** — Les cartes apparaissent avec animation au défilement (IntersectionObserver)
+- **Ripple Effect** — Effet de vague au clic sur les boutons
+- **Compteurs animés** — Les statistiques du profil s'animent au chargement
+- **Toast auto-dismiss** — Les messages disparaissent après 5 secondes
+- **Auto-resize** — Le textarea du LLM s'adapte à son contenu
+
 ---
 
-## 📋 Checklist de validation (cahier des charges)
+## ✅ Checklist de validation (cahier des charges)
 
 - [x] Environnement virtuel `.venv` + `requirements.txt`
 - [x] Architecture MVT : URLs, vues, modèles, templates, statiques
@@ -265,7 +323,7 @@ Thème sombre inspiré de Jellyfin (CSS Vanilla, ~850 lignes) :
 - [x] Template `base.html`, héritage, navigation, CSS
 - [x] Formulaires POST avec `{% csrf_token %}`
 - [x] Inscription, connexion, déconnexion
-- [x] Tests automatisés (30+)
+- [x] Tests automatisés (39)
 - [x] Dépôt GitHub avec commits réguliers
 - [x] `README.md`, `.gitignore`, `requirements.txt`
 - [x] CRUD complet (création, consultation, modification, suppression)
